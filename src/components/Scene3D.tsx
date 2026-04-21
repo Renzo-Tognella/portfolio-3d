@@ -1,14 +1,13 @@
 "use client";
 
-import { useRef, useMemo } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { useRef, useMemo, useEffect, useCallback, useState } from "react";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import {
   Float,
-  MeshTransmissionMaterial,
   Text,
   Sparkles,
-  Environment,
   ContactShadows,
+  PerformanceMonitor,
 } from "@react-three/drei";
 import * as THREE from "three";
 
@@ -17,6 +16,74 @@ import * as THREE from "three";
 // ---------------------------------------------------------------------------
 interface Scene3DProps {
   tier: "high" | "medium" | "low";
+  scrollProgress: number;
+}
+
+// ---------------------------------------------------------------------------
+// Shared node positions (used by nodes + connection lines)
+// ---------------------------------------------------------------------------
+const NODE_POSITIONS: [number, number, number][] = [
+  [-1.8, 1.2, 0.3],
+  [-1.5, 0.3, 1.2],
+  [-1.2, -0.3, 0.8],
+  [1.5, 1.0, 0.5],
+  [1.8, 0.2, 1.0],
+  [1.3, -0.4, 0.6],
+  [0.5, 1.5, 1.0],
+  [-0.5, 1.6, 0.8],
+  [0.0, -0.8, 1.2],
+];
+
+const NODE_CONNECTIONS: [number, number][] = [
+  [0, 1], [0, 2], [1, 3], [2, 4], [3, 5],
+  [4, 6], [5, 7], [6, 8], [0, 4], [1, 7],
+  [2, 6], [3, 8], [0, 8], [1, 5],
+];
+
+const SKILL_NODES: { position: [number, number, number]; label: string; color: string }[] = [
+  { position: NODE_POSITIONS[0], label: "TypeScript", color: "#3178c6" },
+  { position: NODE_POSITIONS[1], label: "React", color: "#61dafb" },
+  { position: NODE_POSITIONS[2], label: "Node.js", color: "#339933" },
+  { position: NODE_POSITIONS[3], label: "AWS", color: "#ff9900" },
+  { position: NODE_POSITIONS[4], label: "Docker", color: "#2496ed" },
+  { position: NODE_POSITIONS[5], label: "Python", color: "#3776ab" },
+  { position: NODE_POSITIONS[6], label: "Next.js", color: "#ffffff" },
+  { position: NODE_POSITIONS[7], label: "Git", color: "#f05032" },
+  { position: NODE_POSITIONS[8], label: "SQL", color: "#336791" },
+];
+
+// ---------------------------------------------------------------------------
+// Camera Rig — scroll-driven camera animation
+// ---------------------------------------------------------------------------
+function CameraRig({ scrollProgress }: { scrollProgress: number }) {
+  const { camera } = useThree();
+  const target = useRef(new THREE.Vector3(0, 0.85, -0.3)); // monitor position
+
+  useFrame(() => {
+    // Scroll 0-0.3: camera stays wide, slight orbit
+    // Scroll 0.3-0.7: camera zooms toward monitor
+    // Scroll 0.7-1.0: camera close to monitor
+
+    const t = scrollProgress;
+    const startZ = 3.5;
+    const endZ = 1.8;
+    const startY = 1.5;
+    const endY = 1.0;
+    const startX = 0;
+    const endX = 0;
+
+    // Ease-out cubic for smooth deceleration
+    const eased = 1 - Math.pow(1 - t, 3);
+
+    const z = startZ + (endZ - startZ) * eased;
+    const y = startY + (endY - startY) * eased;
+    const x = startX + (endX - startX) * eased;
+
+    camera.position.lerp(new THREE.Vector3(x, y, z), 0.05);
+    camera.lookAt(target.current);
+  });
+
+  return null;
 }
 
 // ---------------------------------------------------------------------------
@@ -46,12 +113,11 @@ function Desk() {
 
       {/* Monitor */}
       <group position={[0, 0.85, -0.3]}>
-        {/* Screen bezel */}
         <mesh>
           <boxGeometry args={[1.4, 0.9, 0.05]} />
           <meshStandardMaterial color="#1a1a2e" metalness={0.5} roughness={0.3} />
         </mesh>
-        {/* Screen surface (emissive) */}
+        {/* Screen surface (emissive glow) */}
         <mesh position={[0, 0, 0.03]}>
           <planeGeometry args={[1.3, 0.8]} />
           <meshStandardMaterial
@@ -91,7 +157,6 @@ function Desk() {
           <cylinderGeometry args={[0.06, 0.05, 0.12, 16]} />
           <meshStandardMaterial color="#3a3a4a" metalness={0.2} roughness={0.6} />
         </mesh>
-        {/* Handle */}
         <mesh position={[0.07, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
           <torusGeometry args={[0.04, 0.01, 8, 16, Math.PI]} />
           <meshStandardMaterial color="#3a3a4a" />
@@ -114,16 +179,19 @@ function Desk() {
 }
 
 // ---------------------------------------------------------------------------
-// Skill/Project Nodes (interactive spheres)
+// Skill/Project Nodes (floating spheres with labels)
 // ---------------------------------------------------------------------------
-interface SkillNodeProps {
+function SkillNode({
+  position,
+  label,
+  color = "#6366f1",
+  size = 0.08,
+}: {
   position: [number, number, number];
   label: string;
   color?: string;
   size?: number;
-}
-
-function SkillNode({ position, label, color = "#6366f1", size = 0.08 }: SkillNodeProps) {
+}) {
   const meshRef = useRef<THREE.Mesh>(null);
 
   useFrame((state) => {
@@ -163,53 +231,39 @@ function SkillNode({ position, label, color = "#6366f1", size = 0.08 }: SkillNod
 // ---------------------------------------------------------------------------
 // Connection lines between nodes
 // ---------------------------------------------------------------------------
-function ConnectionLines() {
-  const lines = useMemo(() => {
-    const connections: [number, number][] = [
-      [0, 1], [0, 2], [1, 3], [2, 4], [3, 5],
-      [4, 6], [5, 7], [6, 8], [0, 4], [1, 7],
-      [2, 6], [3, 8], [0, 8], [1, 5],
-    ];
-
-    const nodePositions: [number, number, number][] = [
-      [-1.8, 1.2, 0.3],
-      [-1.5, 0.3, 1.2],
-      [-1.2, -0.3, 0.8],
-      [1.5, 1.0, 0.5],
-      [1.8, 0.2, 1.0],
-      [1.3, -0.4, 0.6],
-      [0.5, 1.5, 1.0],
-      [-0.5, 1.6, 0.8],
-      [0.0, -0.8, 1.2],
-    ];
-
-    return connections.map(([a, b]) => [
-      new THREE.Vector3(...nodePositions[a]),
-      new THREE.Vector3(...nodePositions[b]),
-    ]);
-  }, []);
+function ConnectionLines({ opacity = 0.15 }: { opacity?: number }) {
+  const lines = useMemo(
+    () =>
+      NODE_CONNECTIONS.map(([a, b]) => [
+        new THREE.Vector3(...NODE_POSITIONS[a]),
+        new THREE.Vector3(...NODE_POSITIONS[b]),
+      ]),
+    []
+  );
 
   return (
     <group>
       {lines.map((points, i) => (
-        <primitive key={i} object={new THREE.Line(
-          new THREE.BufferGeometry().setFromPoints(points),
-          new THREE.LineBasicMaterial({
-            color: "#6366f1",
-            transparent: true,
-            opacity: 0.15,
-          })
-        )} />
+        <primitive
+          key={i}
+          object={new THREE.Line(
+            new THREE.BufferGeometry().setFromPoints(points),
+            new THREE.LineBasicMaterial({
+              color: "#6366f1",
+              transparent: true,
+              opacity,
+            })
+          )}
+        />
       ))}
     </group>
   );
 }
 
 // ---------------------------------------------------------------------------
-// Particles (background)
+// Particles
 // ---------------------------------------------------------------------------
-function Particles({ tier }: { tier: string }) {
-  const count = tier === "high" ? 200 : tier === "medium" ? 100 : 50;
+function Particles({ count }: { count: number }) {
   return (
     <Sparkles
       count={count}
@@ -229,56 +283,36 @@ function Lights() {
   return (
     <>
       <ambientLight intensity={0.3} color="#8888cc" />
-      <pointLight
-        position={[0, 2, 0]}
-        intensity={1.0}
-        color="#fff5e1"
-        distance={5}
-        decay={2}
-      />
-      <pointLight
-        position={[-2, 1, 1]}
-        intensity={0.5}
-        color="#6366f1"
-        distance={6}
-        decay={2}
-      />
-      <pointLight
-        position={[2, 0.5, -1]}
-        intensity={0.3}
-        color="#06b6d4"
-        distance={6}
-        decay={2}
-      />
+      <pointLight position={[0, 2, 0]} intensity={1.0} color="#fff5e1" distance={5} decay={2} />
+      <pointLight position={[-2, 1, 1]} intensity={0.5} color="#6366f1" distance={6} decay={2} />
+      <pointLight position={[2, 0.5, -1]} intensity={0.3} color="#06b6d4" distance={6} decay={2} />
     </>
   );
 }
 
 // ---------------------------------------------------------------------------
-// Main Scene
+// Scene content with quality tiers
 // ---------------------------------------------------------------------------
-const SKILL_NODES: SkillNodeProps[] = [
-  { position: [-1.8, 1.2, 0.3], label: "TypeScript", color: "#3178c6" },
-  { position: [-1.5, 0.3, 1.2], label: "React", color: "#61dafb" },
-  { position: [-1.2, -0.3, 0.8], label: "Node.js", color: "#339933" },
-  { position: [1.5, 1.0, 0.5], label: "AWS", color: "#ff9900" },
-  { position: [1.8, 0.2, 1.0], label: "Docker", color: "#2496ed" },
-  { position: [1.3, -0.4, 0.6], label: "Python", color: "#3776ab" },
-  { position: [0.5, 1.5, 1.0], label: "Next.js", color: "#ffffff" },
-  { position: [-0.5, 1.6, 0.8], label: "Git", color: "#f05032" },
-  { position: [0.0, -0.8, 1.2], label: "SQL", color: "#336791" },
-];
+function SceneContent({ tier, scrollProgress }: Scene3DProps) {
+  const [quality, setQuality] = useState(tier);
 
-function SceneContent({ tier }: Scene3DProps) {
+  const handleDecline = useCallback(() => setQuality("low"), []);
+  const handleIncline = useCallback(() => setQuality(tier), [tier]);
+
+  const particleCount = quality === "high" ? 200 : quality === "medium" ? 100 : 50;
+  const nodeSize = quality === "low" ? 0.06 : 0.08;
+
   return (
     <>
+      <PerformanceMonitor onDecline={handleDecline} onIncline={handleIncline} />
+      <CameraRig scrollProgress={scrollProgress} />
       <Lights />
       <Desk />
       <ConnectionLines />
       {SKILL_NODES.map((node, i) => (
-        <SkillNode key={i} {...node} size={tier === "low" ? 0.06 : 0.08} />
+        <SkillNode key={i} {...node} size={nodeSize} />
       ))}
-      <Particles tier={tier} />
+      <Particles count={particleCount} />
       <ContactShadows
         position={[0, -0.05, 0]}
         opacity={0.4}
@@ -290,13 +324,16 @@ function SceneContent({ tier }: Scene3DProps) {
   );
 }
 
-export default function Scene3D({ tier }: Scene3DProps) {
+// ---------------------------------------------------------------------------
+// Exported Scene3D component
+// ---------------------------------------------------------------------------
+export default function Scene3D({ tier, scrollProgress }: Scene3DProps) {
   const dpr: [number, number] = tier === "high" ? [1, 1.5] : [1, 1];
 
   return (
     <Canvas
       dpr={dpr}
-      frameloop="demand"
+      frameloop="always"
       gl={{
         antialias: tier !== "low",
         powerPreference: "high-performance",
@@ -307,7 +344,7 @@ export default function Scene3D({ tier }: Scene3DProps) {
       performance={{ min: 0.5 }}
       style={{ background: "transparent" }}
     >
-      <SceneContent tier={tier} />
+      <SceneContent tier={tier} scrollProgress={scrollProgress} />
     </Canvas>
   );
 }

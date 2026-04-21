@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 
 // Lazy load the 3D scene — never SSR
 const Scene3D = dynamic(() => import("@/components/Scene3D"), {
@@ -61,6 +61,25 @@ function useDeviceTier() {
   return tier;
 }
 
+function useScrollProgress() {
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY;
+      const windowH = window.innerHeight;
+      // Progress from 0 (top) to 1 (scrolled 1 viewport)
+      const p = Math.min(scrollY / windowH, 1);
+      setProgress(p);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  return progress;
+}
+
 function StaticHero() {
   return (
     <div className="flex h-full items-center justify-center">
@@ -82,9 +101,9 @@ function StaticHero() {
 export function Hero() {
   const tier = useDeviceTier();
   const [mounted, setMounted] = useState(false);
+  const scrollProgress = useScrollProgress();
 
   useEffect(() => {
-    // Delay 3D load until after initial paint
     const timer = setTimeout(() => setMounted(true), 100);
     return () => clearTimeout(timer);
   }, []);
@@ -92,27 +111,36 @@ export function Hero() {
   if (!mounted) return <HeroSkeleton />;
   if (tier === "none") return <StaticHero />;
 
+  // Fade overlay text as user scrolls
+  const textOpacity = Math.max(0, 1 - scrollProgress * 2);
+
   return (
     <section id="hero" className="relative h-screen w-full">
       <div className="absolute inset-0">
-        <Scene3D tier={tier} />
+        <Scene3D tier={tier} scrollProgress={scrollProgress} />
       </div>
 
-      {/* Overlay content */}
-      <div className="relative z-10 flex h-full flex-col items-center justify-center pointer-events-none">
-        <h1 className="text-5xl font-bold tracking-tight sm:text-7xl opacity-0 animate-[fadeIn_1s_ease_0.5s_forwards]">
+      {/* Overlay content — fades out on scroll */}
+      <div
+        className="relative z-10 flex h-full flex-col items-center justify-center pointer-events-none"
+        style={{ opacity: textOpacity }}
+      >
+        <h1 className="text-5xl font-bold tracking-tight sm:text-7xl">
           Renzo<span className="text-accent">.</span>
         </h1>
-        <p className="mt-4 text-lg text-muted sm:text-xl opacity-0 animate-[fadeIn_1s_ease_0.8s_forwards]">
+        <p className="mt-4 text-lg text-muted sm:text-xl">
           Software Engineer
         </p>
-        <p className="mt-2 font-mono text-sm text-muted/70 opacity-0 animate-[fadeIn_1s_ease_1.1s_forwards]">
-          Construíndo sistemas que escalam
+        <p className="mt-2 font-mono text-sm text-muted/70">
+          Construindo sistemas que escalam
         </p>
       </div>
 
-      {/* Scroll indicator */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 opacity-0 animate-[fadeIn_1s_ease_1.5s_forwards]">
+      {/* Scroll indicator — fades out quickly */}
+      <div
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10"
+        style={{ opacity: Math.max(0, 1 - scrollProgress * 4) }}
+      >
         <div className="flex flex-col items-center gap-2">
           <span className="text-xs text-muted">scroll</span>
           <div className="h-8 w-[1px] bg-gradient-to-b from-accent to-transparent animate-pulse" />
