@@ -279,6 +279,149 @@
   }
 }
 
+/* ── About section — cinematic redesign ── */
+
+/* Terminal bio */
+.about-terminal {
+  opacity: 0;
+  transform: translateY(20px);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(8px);
+  padding: 1.25rem;
+}
+.about-terminal.is-visible {
+  animation: aboutFadeSlideIn 0.7s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
+}
+
+/* Glass card */
+.about-glass-card {
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(16px);
+  padding: 1.25rem;
+}
+
+/* Stat cards */
+.about-stat-card {
+  opacity: 0;
+  transform: translateY(24px);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(16px);
+  padding: 1.5rem;
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.about-stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 0 30px -10px var(--accent);
+}
+/* Stat card reveal via IntersectionObserver — add .is-visible via JS */
+.about-stat-card.is-visible {
+  animation: aboutFadeSlideIn 0.6s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
+  animation-delay: var(--stagger, 0ms);
+}
+
+/* Fade-in class for generic blocks */
+.about-fade-in {
+  opacity: 0;
+  transform: translateY(20px);
+}
+.about-fade-in.is-visible {
+  animation: aboutFadeSlideIn 0.7s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
+}
+
+/* Timeline entries */
+.about-timeline-entry {
+  opacity: 0;
+  transform: translateY(16px);
+}
+.about-timeline-entry.is-visible {
+  animation: aboutFadeSlideIn 0.6s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
+  animation-delay: var(--stagger, 0ms);
+}
+
+/* Timeline node glow pulse */
+.about-timeline-node {
+  transition: box-shadow 0.3s ease;
+}
+.about-timeline-entry.is-visible .about-timeline-node {
+  box-shadow: 0 0 10px var(--accent), 0 0 20px rgba(99, 102, 241, 0.2);
+}
+
+/* Tech cards */
+.about-tech-card {
+  opacity: 0;
+  transform: translateY(24px);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  overflow: hidden;
+}
+.about-tech-card.is-visible {
+  animation: aboutFadeSlideIn 0.6s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
+  animation-delay: var(--stagger, 0ms);
+}
+
+/* Skill bars — animate width on reveal */
+.about-skill-row {
+  opacity: 0;
+}
+.about-tech-card.is-visible .about-skill-row {
+  animation: aboutFadeSlideIn 0.4s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
+  animation-delay: calc(var(--stagger, 0ms) + 300ms + var(--bar-stagger, 0ms));
+}
+.about-tech-card.is-visible .about-skill-bar {
+  animation: aboutSkillBarFill 800ms cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
+  animation-delay: calc(var(--stagger, 0ms) + 400ms + var(--bar-stagger, 0ms));
+}
+
+@keyframes aboutFadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes aboutSkillBarFill {
+  from {
+    width: 0%;
+  }
+  to {
+    width: var(--target-width, 0%);
+  }
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .about-terminal,
+  .about-stat-card,
+  .about-fade-in,
+  .about-timeline-entry,
+  .about-tech-card,
+  .about-skill-row {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+  .about-skill-bar {
+    width: var(--target-width, 0%) !important;
+    animation: none;
+  }
+  .about-timeline-node {
+    box-shadow: none;
+  }
+}
+
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--accent) var(--surface);

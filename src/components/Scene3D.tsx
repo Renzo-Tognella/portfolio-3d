@@ -7,6 +7,8 @@ import {
   Sparkles,
   PerformanceMonitor,
   OrbitControls,
+  RenderTexture,
+  Text,
 } from "@react-three/drei";
 import * as THREE from "three";
 
@@ -52,11 +54,20 @@ const MAT = {
 };
 
 // ---------------------------------------------------------------------------
-// Camera Rig — scroll-driven + mouse parallax
+// Dive Camera — scroll-driven keyframes zooming into the monitor
 // ---------------------------------------------------------------------------
-function CameraRig({ scrollProgress }: { scrollProgress: number }) {
+const CAMERA_KEYFRAMES = [
+  { progress: 0.0, pos: new THREE.Vector3(8, 6.5, 8), fov: 36, lookAt: new THREE.Vector3(0, 0.8, 0) },
+  { progress: 0.25, pos: new THREE.Vector3(5, 3.5, 5), fov: 34, lookAt: new THREE.Vector3(0, 0.85, -0.1) },
+  { progress: 0.5, pos: new THREE.Vector3(2, 1.8, 2.5), fov: 32, lookAt: new THREE.Vector3(0, 0.9, -0.25) },
+  { progress: 0.75, pos: new THREE.Vector3(0.3, 1.1, 1.2), fov: 28, lookAt: new THREE.Vector3(0, 0.79, -0.35) },
+  { progress: 1.0, pos: new THREE.Vector3(0.0, 1.0, 0.5), fov: 24, lookAt: new THREE.Vector3(0, 0.79, -0.35) },
+];
+
+function DiveCamera({ scrollProgress }: { scrollProgress: number }) {
   const { camera } = useThree();
   const mouse = useRef({ x: 0, y: 0 });
+  const smoothProgress = useRef(0);
 
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
@@ -67,24 +78,53 @@ function CameraRig({ scrollProgress }: { scrollProgress: number }) {
     return () => window.removeEventListener("mousemove", onMove);
   }, []);
 
-  useFrame(() => {
-    const t = scrollProgress;
-    const eased = 1 - Math.pow(1 - t, 3);
-
-    // Start wider isometric, zoom in on scroll
-    const baseX = 8 + (3 - 8) * eased;
-    const baseY = 6.5 + (2.5 - 6.5) * eased;
-    const baseZ = 8 + (3 - 8) * eased;
-
-    // Mouse parallax
-    const mx = mouse.current.x * 0.25 * (1 - eased * 0.6);
-    const my = -mouse.current.y * 0.15 * (1 - eased * 0.6);
-
-    camera.position.lerp(
-      new THREE.Vector3(baseX + mx, baseY + my, baseZ),
-      0.04
+  useFrame((_, delta) => {
+    // Smooth the scroll progress
+    smoothProgress.current = THREE.MathUtils.damp(
+      smoothProgress.current,
+      scrollProgress,
+      4,
+      delta
     );
-    camera.lookAt(0, 0.8, 0);
+
+    const t = Math.min(1, Math.max(0, smoothProgress.current));
+
+    // Find surrounding keyframes
+    let fromIdx = 0;
+    for (let i = 0; i < CAMERA_KEYFRAMES.length - 1; i++) {
+      if (t >= CAMERA_KEYFRAMES[i].progress && t <= CAMERA_KEYFRAMES[i + 1].progress) {
+        fromIdx = i;
+        break;
+      }
+    }
+    const from = CAMERA_KEYFRAMES[fromIdx];
+    const to = CAMERA_KEYFRAMES[Math.min(fromIdx + 1, CAMERA_KEYFRAMES.length - 1)];
+
+    // Local progress between the two keyframes
+    const range = to.progress - from.progress;
+    const localT = range > 0 ? Math.min(1, (t - from.progress) / range) : 0;
+
+    // Interpolate position and lookAt
+    const pos = new THREE.Vector3().lerpVectors(from.pos, to.pos, localT);
+    const look = new THREE.Vector3().lerpVectors(from.lookAt, to.lookAt, localT);
+
+    // Mouse parallax — diminishes as we dive in
+    const parallaxStrength = 1 - t * 0.9;
+    const mx = mouse.current.x * 0.25 * parallaxStrength;
+    const my = -mouse.current.y * 0.15 * parallaxStrength;
+
+    pos.x += mx;
+    pos.y += my;
+
+    camera.position.lerp(pos, 0.08);
+    camera.lookAt(look);
+
+    // Animate FOV
+    const targetFov = THREE.MathUtils.lerp(from.fov, to.fov, localT);
+    if (camera instanceof THREE.PerspectiveCamera) {
+      camera.fov = THREE.MathUtils.lerp(camera.fov, targetFov, 0.08);
+      camera.updateProjectionMatrix();
+    }
   });
 
   return null;
@@ -123,17 +163,90 @@ function Desk() {
 }
 
 // ---------------------------------------------------------------------------
-// Monitor with stand
+// Monitor with RenderTexture + turn-on effect
 // ---------------------------------------------------------------------------
-function Monitor() {
-  const screenRef = useRef<THREE.Mesh>(null);
+function MonitorScreenContent() {
+  return (
+    <>
+      <color attach="background" args={["#0d1117"]} />
+      {/* Title */}
+      <Text
+        position={[0, 0.25, 0]}
+        fontSize={0.12}
+        color="#818cf8"
+        anchorX="center"
+        anchorY="middle"
+        maxWidth={1.2}
+      >
+        Sobre
+      </Text>
+      {/* Subtitle */}
+      <Text
+        position={[0, 0.08, 0]}
+        fontSize={0.04}
+        color="#94a3b8"
+        anchorX="center"
+        anchorY="middle"
+        maxWidth={1.4}
+      >
+        Backend Software Engineer
+      </Text>
+      {/* Mini stat cards */}
+      {[
+        { x: -0.35, label: "3+", sub: "anos exp" },
+        { x: 0.0, label: "50+", sub: "prop/dia" },
+        { x: 0.35, label: "IEEE", sub: "LARS/SBR" },
+      ].map((card, i) => (
+        <group key={i} position={[card.x, -0.15, 0]}>
+          <mesh>
+            <planeGeometry args={[0.28, 0.2]} />
+            <meshBasicMaterial color="#161b22" />
+          </mesh>
+          <Text position={[0, 0.04, 0.001]} fontSize={0.05} color="#818cf8" anchorX="center" anchorY="middle">
+            {card.label}
+          </Text>
+          <Text position={[0, -0.04, 0.001]} fontSize={0.025} color="#6b7280" anchorX="center" anchorY="middle">
+            {card.sub}
+          </Text>
+        </group>
+      ))}
+      {/* Code lines decoration */}
+      {[-0.32, -0.22, -0.12].map((y, i) => (
+        <mesh key={`line-${i}`} position={[-0.15 + i * 0.08, y, 0]}>
+          <planeGeometry args={[0.4 + Math.sin(i * 2) * 0.15, 0.012]} />
+          <meshBasicMaterial color="#818cf8" transparent opacity={0.15} />
+        </mesh>
+      ))}
+    </>
+  );
+}
 
-  useFrame((state) => {
-    if (screenRef.current) {
-      const mat = screenRef.current.material as THREE.MeshStandardMaterial;
-      mat.emissiveIntensity = 0.25 + Math.sin(state.clock.elapsedTime * 1.2) * 0.08;
+function Monitor({ scrollProgress }: { scrollProgress: number }) {
+  const screenRef = useRef<THREE.Mesh>(null);
+  const emissiveIntensity = useRef(0);
+
+  // Turn-on curve: screen stays off until progress ~0.3, then glows to full by 0.6
+  useFrame((state, delta) => {
+    if (!screenRef.current) return;
+    const mat = screenRef.current.material as THREE.MeshStandardMaterial;
+
+    // Turn-on curve
+    let targetIntensity = 0;
+    if (scrollProgress > 0.3 && scrollProgress <= 0.6) {
+      targetIntensity = ((scrollProgress - 0.3) / 0.3) * 1.2;
+    } else if (scrollProgress > 0.6) {
+      targetIntensity = 1.0 + Math.sin(state.clock.elapsedTime * 1.2) * 0.08;
     }
+
+    emissiveIntensity.current = THREE.MathUtils.lerp(
+      emissiveIntensity.current,
+      targetIntensity,
+      delta * 3
+    );
+    mat.emissiveIntensity = emissiveIntensity.current;
   });
+
+  const isScreenOn = scrollProgress > 0.28;
 
   return (
     <group position={[0, 0.79, -0.35]}>
@@ -142,20 +255,27 @@ function Monitor() {
         <boxGeometry args={[1.8, 1.1, 0.06]} />
         {MAT.metal("#1a1a2e")}
       </mesh>
-      {/* Screen */}
+      {/* Screen — with RenderTexture when on, plain black when off */}
       <mesh ref={screenRef} position={[0, 0, 0.035]}>
         <planeGeometry args={[1.65, 0.95]} />
-        {MAT.emissive("#3B4CC0", 0.25)}
+        <meshStandardMaterial
+          emissive={isScreenOn ? "#6366f1" : "#000000"}
+          emissiveIntensity={0}
+          toneMapped={false}
+        >
+          {isScreenOn && (
+            <RenderTexture
+              attach="emissiveMap"
+              width={1920}
+              height={1080}
+              samples={8}
+              anisotropy={16}
+            >
+              <MonitorScreenContent />
+            </RenderTexture>
+          )}
+        </meshStandardMaterial>
       </mesh>
-      {/* Code lines on screen */}
-      <group position={[0, 0, 0.037]}>
-        {[-0.3, -0.2, -0.1, 0.0, 0.1, 0.2, 0.3].map((y, i) => (
-          <mesh key={i} position={[-0.1 + (i % 3) * 0.12, y, 0]}>
-            <planeGeometry args={[0.35 + Math.sin(i * 1.3) * 0.2, 0.018]} />
-            <meshBasicMaterial color="#7C8CFF" transparent opacity={0.25 + (i % 3) * 0.08} />
-          </mesh>
-        ))}
-      </group>
       {/* Stand neck */}
       <mesh position={[0, -0.6, 0]} castShadow>
         <boxGeometry args={[0.08, 0.2, 0.08]} />
@@ -165,6 +285,16 @@ function Monitor() {
       <mesh position={[0, -0.7, 0.05]} castShadow>
         <boxGeometry args={[0.5, 0.04, 0.3]} />
         {MAT.metal("#2a2a3a")}
+      </mesh>
+      {/* Power LED */}
+      <mesh position={[0.75, -0.48, 0.035]}>
+        <circleGeometry args={[0.012, 12]} />
+        <meshStandardMaterial
+          color={isScreenOn ? "#22c55e" : "#333333"}
+          emissive={isScreenOn ? "#22c55e" : "#000000"}
+          emissiveIntensity={isScreenOn ? 1.5 : 0}
+          toneMapped={false}
+        />
       </mesh>
     </group>
   );
@@ -768,7 +898,8 @@ function SceneContent({ tier, scrollProgress }: Scene3DProps) {
 
   const dustCount = quality === "high" ? 80 : quality === "medium" ? 40 : 15;
   const sparkleCount = quality === "high" ? 100 : quality === "medium" ? 50 : 20;
-  const autoRotate = !(scrollProgress > 0.02 && scrollProgress < 0.95);
+  // Only auto-rotate when at the very top (progress ≈ 0)
+  const autoRotate = scrollProgress < 0.03;
 
   return (
     <>
@@ -778,10 +909,11 @@ function SceneContent({ tier, scrollProgress }: Scene3DProps) {
       <color attach="background" args={["#0a0a12"]} />
       <fog attach="fog" args={["#0a0a12", 12, 25]} />
 
-      <CameraRig scrollProgress={scrollProgress} />
+      <DiveCamera scrollProgress={scrollProgress} />
       <OrbitControls
         enableZoom={false}
         enablePan={false}
+        enableRotate={scrollProgress < 0.05}
         maxPolarAngle={Math.PI / 2.2}
         minPolarAngle={Math.PI / 6}
         autoRotate={autoRotate}
@@ -799,7 +931,7 @@ function SceneContent({ tier, scrollProgress }: Scene3DProps) {
       <Rug />
       <RubyFrame />
       <Desk />
-      <Monitor />
+      <Monitor scrollProgress={scrollProgress} />
       <SecondMonitor />
       <Keyboard />
       <Mouse />
