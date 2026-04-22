@@ -47,12 +47,38 @@
   }
 }
 
-/* ── Project card scroll-reveal animations ── */
+/* ── Project cinematic scroll-reveal animations ── */
 
-@keyframes projectCardIn {
+@keyframes projectHeadingTitleIn {
   from {
     opacity: 0;
-    transform: translateY(30px);
+    transform: translateY(16px);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes projectHeadingLineIn {
+  from {
+    opacity: 0;
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+  to {
+    opacity: 1;
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+}
+
+@keyframes projectHeadingDescIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
   }
   to {
     opacity: 1;
@@ -60,68 +86,109 @@
   }
 }
 
-@keyframes projectNumberIn {
-  from {
-    opacity: 0;
-    transform: scale(0.8);
+@keyframes cinematicImageGlow {
+  0%, 100% {
+    filter: brightness(1) drop-shadow(0 0 30px var(--glow-color, rgba(99, 102, 241, 0.15)));
   }
-  to {
-    opacity: 1;
-    transform: scale(1);
+  50% {
+    filter: brightness(1.05) drop-shadow(0 0 50px var(--glow-color, rgba(99, 102, 241, 0.25)));
   }
 }
 
-@keyframes projectPillIn {
-  from {
-    opacity: 0;
-    transform: scale(0.8);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-/* Base (hidden) states */
-.project-card {
+/* ── Heading reveal ── */
+.project-heading .project-heading-title {
   opacity: 0;
-  transform: translateY(30px);
+  transform: translateY(16px);
+  filter: blur(4px);
 }
 
-.project-card.is-visible {
-  animation: projectCardIn 0.7s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
-  animation-delay: var(--stagger, 0ms);
+.project-heading.is-visible .project-heading-title {
+  animation: projectHeadingTitleIn 0.8s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
 }
 
-.project-number {
+.project-heading .project-heading-line {
   opacity: 0;
-  transform: scale(0.8);
+  transform: scaleX(0);
+  transform-origin: left;
 }
 
-.project-number.is-visible {
-  animation: projectNumberIn 0.6s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
-  /* Numbers appear 200ms before their card */
-  animation-delay: calc(var(--stagger, 0ms) - 200ms);
+.project-heading.is-visible .project-heading-line {
+  animation: projectHeadingLineIn 0.9s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
+  animation-delay: 150ms;
 }
 
-.project-pill {
+.project-heading .project-heading-desc {
   opacity: 0;
-  transform: scale(0.8);
+  transform: translateY(12px);
 }
 
-.project-pill.is-visible {
-  animation: projectPillIn 0.5s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
-  animation-delay: var(--stagger, 0ms);
+.project-heading.is-visible .project-heading-desc {
+  animation: projectHeadingDescIn 0.7s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
+  animation-delay: 300ms;
+}
+
+/* ── Cinematic image wrapper ── */
+.project-image-wrapper {
+  opacity: 0;
+  transform: scale(0.92);
+  transition: opacity 0.6s cubic-bezier(0.215, 0.61, 0.355, 1),
+              transform 0.6s cubic-bezier(0.215, 0.61, 0.355, 1),
+              box-shadow 0.7s ease;
+}
+
+.project-image-wrapper.is-visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.project-image-wrapper:hover {
+  box-shadow: 0 0 80px -20px rgba(99, 102, 241, 0.2);
+}
+
+/* ── Cinematic row spacing ── */
+.project-cinematic-row {
+  position: relative;
+}
+
+/* Decorative side accent line for each row */
+.project-cinematic-row::before {
+  content: "";
+  position: absolute;
+  left: -24px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    var(--border) 20%,
+    var(--border) 80%,
+    transparent 100%
+  );
+  opacity: 0.3;
+}
+
+@media (max-width: 768px) {
+  .project-cinematic-row::before {
+    display: none;
+  }
 }
 
 /* Respect reduced motion — skip all project animations */
 @media (prefers-reduced-motion: reduce) {
-  .project-card,
-  .project-number,
-  .project-pill {
+  .project-heading .project-heading-title,
+  .project-heading .project-heading-line,
+  .project-heading .project-heading-desc {
     opacity: 1;
     transform: none;
+    filter: none;
     animation: none;
+  }
+
+  .project-image-wrapper {
+    opacity: 1;
+    transform: none;
+    clip-path: none !important;
   }
 }
 

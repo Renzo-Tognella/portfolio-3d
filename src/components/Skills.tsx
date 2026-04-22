@@ -9,7 +9,7 @@ import {
 } from "react";
 
 /* ────────────────────────────────────────────
-   Data
+   Data — Real skills from resume
    ──────────────────────────────────────────── */
 
 interface Skill {
@@ -25,48 +25,44 @@ interface Category {
 
 const SKILL_CATEGORIES: Category[] = [
   {
-    name: "Frontend",
+    name: "Backend",
     accent: "indigo",
     skills: [
-      { name: "TypeScript", level: 90 },
-      { name: "React", level: 95 },
-      { name: "Next.js", level: 85 },
-      { name: "Tailwind CSS", level: 80 },
-      { name: "Three.js", level: 65 },
+      { name: "Ruby on Rails", level: 95 },
+      { name: "Python", level: 85 },
+      { name: "Java", level: 70 },
+      { name: "REST APIs", level: 95 },
+      { name: "RSpec / TDD", level: 85 },
     ],
   },
   {
-    name: "Backend",
+    name: "Bancos de Dados",
     accent: "cyan",
     skills: [
-      { name: "Node.js", level: 90 },
-      { name: "Python", level: 85 },
-      { name: "SQL", level: 80 },
-      { name: "PostgreSQL", level: 75 },
-      { name: "REST", level: 90 },
-      { name: "GraphQL", level: 70 },
+      { name: "PostgreSQL", level: 90 },
+      { name: "Redis", level: 80 },
+      { name: "MongoDB", level: 65 },
+      { name: "SQL Avançado", level: 85 },
     ],
   },
   {
-    name: "DevOps",
+    name: "Infraestrutura",
     accent: "amber",
     skills: [
-      { name: "AWS", level: 80 },
-      { name: "Docker", level: 90 },
-      { name: "Kubernetes", level: 70 },
-      { name: "CI/CD", level: 85 },
-      { name: "Terraform", level: 65 },
+      { name: "Docker", level: 85 },
+      { name: "AWS", level: 75 },
+      { name: "Git", level: 90 },
+      { name: "CI/CD", level: 80 },
     ],
   },
   {
-    name: "Tools",
+    name: "Qualidade & IA",
     accent: "rose",
     skills: [
-      { name: "Git", level: 95 },
-      { name: "Linux", level: 85 },
-      { name: "Neovim", level: 80 },
-      { name: "Figma", level: 60 },
-      { name: "Blender", level: 50 },
+      { name: "Clean Architecture", level: 90 },
+      { name: "SOLID / Design Patterns", level: 85 },
+      { name: "LLMs / MCP", level: 80 },
+      { name: "C++ / Computer Vision", level: 70 },
     ],
   },
 ];
@@ -104,37 +100,12 @@ const ACCENT_COLORS = {
 } as const;
 
 /* ────────────────────────────────────────────
-   SVG Icons — paths designed for stroke-dashoffset draw-on
+   SVG Icons — stroke-dashoffset draw-on
    ──────────────────────────────────────────── */
-
-function FrontendIcon({ stroke }: { stroke: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      strokeWidth={1.75}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="skill-svg h-7 w-7"
-      style={{ color: stroke }}
-    >
-      <polyline className="skill-svg-path" points="16 18 22 12 16 6" />
-      <polyline className="skill-svg-path" points="8 6 2 12 8 18" />
-    </svg>
-  );
-}
 
 function BackendIcon({ stroke }: { stroke: string }) {
   return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      strokeWidth={1.75}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="skill-svg h-7 w-7"
-      style={{ color: stroke }}
-    >
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className="skill-svg h-7 w-7" style={{ color: stroke }}>
       <rect className="skill-svg-path" x="2" y="2" width="20" height="8" rx="2" />
       <rect className="skill-svg-path" x="2" y="14" width="20" height="8" rx="2" />
       <circle cx="6" cy="6" r="1" fill="currentColor" />
@@ -143,49 +114,38 @@ function BackendIcon({ stroke }: { stroke: string }) {
   );
 }
 
-function DevOpsIcon({ stroke }: { stroke: string }) {
+function DatabaseIcon({ stroke }: { stroke: string }) {
   return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      strokeWidth={1.75}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="skill-svg h-7 w-7"
-      style={{ color: stroke }}
-    >
-      <path
-        className="skill-svg-path"
-        d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"
-      />
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className="skill-svg h-7 w-7" style={{ color: stroke }}>
+      <ellipse className="skill-svg-path" cx="12" cy="5" rx="9" ry="3" />
+      <path className="skill-svg-path" d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+      <path className="skill-svg-path" d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
     </svg>
   );
 }
 
-function ToolsIcon({ stroke }: { stroke: string }) {
+function InfraIcon({ stroke }: { stroke: string }) {
   return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      strokeWidth={1.75}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="skill-svg h-7 w-7"
-      style={{ color: stroke }}
-    >
-      <path
-        className="skill-svg-path"
-        d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"
-      />
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className="skill-svg h-7 w-7" style={{ color: stroke }}>
+      <path className="skill-svg-path" d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" />
+    </svg>
+  );
+}
+
+function QualityIcon({ stroke }: { stroke: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className="skill-svg h-7 w-7" style={{ color: stroke }}>
+      <path className="skill-svg-path" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      <path className="skill-svg-path" d="m9 12 2 2 4-4" />
     </svg>
   );
 }
 
 const CATEGORY_ICONS: Record<string, (props: { stroke: string }) => ReactElement> = {
-  Frontend: FrontendIcon,
-  Backend: BackendIcon,
-  DevOps: DevOpsIcon,
-  Tools: ToolsIcon,
+  "Backend": BackendIcon,
+  "Bancos de Dados": DatabaseIcon,
+  "Infraestrutura": InfraIcon,
+  "Qualidade & IA": QualityIcon,
 };
 
 /* ────────────────────────────────────────────
@@ -234,7 +194,7 @@ export function Skills() {
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [visible, setVisible] = useState(false);
 
-  /* ── Intersection Observer: reveal section once ── */
+  /* ── Intersection Observer ── */
   useEffect(() => {
     const el = sectionRef.current;
     if (!el) return;
@@ -253,7 +213,7 @@ export function Skills() {
     return () => observer.disconnect();
   }, []);
 
-  /* ── Initialise SVG stroke-dasharray once paths mount ── */
+  /* ── SVG stroke-dasharray draw-on ── */
   useEffect(() => {
     if (!visible) return;
 
@@ -266,14 +226,12 @@ export function Skills() {
       });
     });
 
-    // Force reflow, then trigger transitions on next frame
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         cardRefs.current.forEach((card) => {
           if (!card) return;
           card.querySelectorAll<SVGPathElement>(".skill-svg-path").forEach((path) => {
-            path.style.transition =
-              "stroke-dashoffset 800ms cubic-bezier(0.215, 0.61, 0.355, 1)";
+            path.style.transition = "stroke-dashoffset 800ms cubic-bezier(0.215, 0.61, 0.355, 1)";
             path.style.strokeDashoffset = "0";
           });
         });
@@ -281,14 +239,14 @@ export function Skills() {
     });
   }, [visible]);
 
-  /* ── Mouse parallax handler ── */
+  /* ── Mouse parallax ── */
   const handleMouseMove = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
       const card = e.currentTarget;
       const rect = card.getBoundingClientRect();
       const cx = rect.left + rect.width / 2;
       const cy = rect.top + rect.height / 2;
-      const dx = ((e.clientX - cx) / (rect.width / 2)) * 4; // max ±4px
+      const dx = ((e.clientX - cx) / (rect.width / 2)) * 4;
       const dy = ((e.clientY - cy) / (rect.height / 2)) * 4;
       card.style.transform = `translate(${dx}px, ${dy}px)`;
     },
@@ -299,7 +257,6 @@ export function Skills() {
     e.currentTarget.style.transform = "translate(0, 0)";
   }, []);
 
-  /* ── setCardRef helper ── */
   const setCardRef = useCallback(
     (index: number) => (el: HTMLDivElement | null) => {
       cardRefs.current[index] = el;
@@ -308,11 +265,7 @@ export function Skills() {
   );
 
   return (
-    <section
-      ref={sectionRef}
-      id="skills"
-      className="mx-auto max-w-6xl px-6 py-24"
-    >
+    <section ref={sectionRef} id="skills" className="mx-auto max-w-6xl px-6 py-24">
       {/* ── heading ── */}
       <div className="mb-14">
         <h2 className="mb-3 font-mono text-sm font-semibold uppercase tracking-widest text-accent">
@@ -349,7 +302,7 @@ export function Skills() {
               <div className={`h-1 w-full ${colors.strip}`} />
 
               <div className="p-6">
-                {/* category header with SVG icon + name */}
+                {/* category header */}
                 <div className="skill-card-title mb-6 flex items-center gap-3">
                   <span className={colors.text}>
                     {Icon && <Icon stroke={colors.stroke} />}
