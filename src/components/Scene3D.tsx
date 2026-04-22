@@ -54,25 +54,23 @@ const MAT = {
 };
 
 // ---------------------------------------------------------------------------
-// Dive Camera — scroll-driven keyframes focused on MONITOR as hero element
+// Dive Camera — diagonal angle, monitor as hero, chair NOT in frame
 //
-// Composition rationale:
-//   - Camera starts low-front, looking UP at the monitor (monitor dominates frame)
-//   - Keyboard is behind/in-front of camera POV, barely visible
-//   - Scroll drives camera closer to the monitor screen
-//   - FOV narrows as we approach, creating depth compression
+// Camera starts front-right diagonal (~40°), slightly above desk level.
+// This avoids the chair (which is at z=1.3) and keeps the monitor dominant.
+// Scroll drives camera closer and slightly lower, narrowing FOV.
 // ---------------------------------------------------------------------------
 const CAMERA_KEYFRAMES = [
-  // Phase 0: Establishing shot — monitor fills upper 60% of frame
-  { progress: 0.0, pos: new THREE.Vector3(0.8, 1.3, 3.5), fov: 42, lookAt: new THREE.Vector3(0, 1.1, -0.5) },
-  // Phase 1: Slight drift closer — desk objects come into peripheral view
-  { progress: 0.2, pos: new THREE.Vector3(0.5, 1.2, 2.8), fov: 40, lookAt: new THREE.Vector3(0, 1.05, -0.4) },
-  // Phase 2: Closing in — monitor dominates, keyboard starts leaving frame
-  { progress: 0.45, pos: new THREE.Vector3(0.15, 1.05, 1.8), fov: 36, lookAt: new THREE.Vector3(0, 0.95, -0.35) },
-  // Phase 3: Very close — screen content becomes legible
-  { progress: 0.7, pos: new THREE.Vector3(0.0, 0.95, 0.9), fov: 30, lookAt: new THREE.Vector3(0, 0.85, -0.3) },
-  // Phase 4: Final dive — right at the monitor screen
-  { progress: 1.0, pos: new THREE.Vector3(0.0, 0.85, 0.35), fov: 22, lookAt: new THREE.Vector3(0, 0.82, -0.35) },
+  // Phase 0: Wide diagonal establishing — monitor visible, desk context
+  { progress: 0.0, pos: new THREE.Vector3(3.5, 2.2, 3.0), fov: 38, lookAt: new THREE.Vector3(0, 1.0, -0.2) },
+  // Phase 1: Drift closer, slight descent
+  { progress: 0.2, pos: new THREE.Vector3(2.5, 1.8, 2.2), fov: 36, lookAt: new THREE.Vector3(0, 1.0, -0.25) },
+  // Phase 2: Tighter — monitor dominates frame
+  { progress: 0.45, pos: new THREE.Vector3(1.2, 1.3, 1.4), fov: 32, lookAt: new THREE.Vector3(0, 0.95, -0.3) },
+  // Phase 3: Very close — screen content legible
+  { progress: 0.7, pos: new THREE.Vector3(0.4, 1.0, 0.7), fov: 26, lookAt: new THREE.Vector3(0, 0.85, -0.35) },
+  // Phase 4: Final — right at the monitor screen
+  { progress: 1.0, pos: new THREE.Vector3(0.05, 0.88, 0.25), fov: 20, lookAt: new THREE.Vector3(0, 0.82, -0.35) },
 ];
 
 function DiveCamera({ scrollProgress }: { scrollProgress: number }) {
@@ -721,7 +719,7 @@ function FloatingDust({ count }: { count: number }) {
 // ---------------------------------------------------------------------------
 function Chair() {
   return (
-    <group position={[0, 0, 1.3]} rotation={[0, Math.PI, 0]}>
+    <group position={[0.3, 0, 1.6]} rotation={[0, Math.PI, 0]}>
       {/* Seat */}
       <mesh position={[0, 0.55, 0]} castShadow>
         <boxGeometry args={[0.55, 0.06, 0.5]} />
@@ -873,63 +871,61 @@ function Floor() {
 }
 
 // ---------------------------------------------------------------------------
-// Lights — cinematic 3-point + accent
-//
-// Hierarchy:
-//   1. Key light → warm, aimed at monitor (hero element)
-//   2. Fill light → cool, from opposite side, lifts shadows
-//   3. Rim light → behind setup, creates silhouette edge
-//   4. Desk lamp → practical warm light (already in scene)
-//   5. Monitor glow → emissive from screen (increases with scroll)
-//   6. Accent → indigo bounce, adds color identity
+// Lights — bright cinematic 3-point for dark scene visibility
 // ---------------------------------------------------------------------------
 function Lights() {
   return (
     <>
-      {/* Ambient — lifted from 0.12 to 0.2 for base readability */}
-      <ambientLight intensity={0.2} color="#C8D4E8" />
+      {/* Ambient — strong enough to see everything */}
+      <ambientLight intensity={0.35} color="#D0D8E8" />
 
-      {/* KEY LIGHT — warm, from upper-right, aimed at monitor area */}
+      {/* KEY LIGHT — warm spot from upper-right, hitting monitor + desk */}
       <spotLight
-        position={[2.5, 4, 2]}
-        angle={0.5}
-        penumbra={0.6}
-        intensity={1.8}
+        position={[3, 5, 3]}
+        angle={0.6}
+        penumbra={0.5}
+        intensity={3.0}
         color="#FFE0B0"
-        target-position={[0, 0.9, -0.3]}
         castShadow
         shadow-mapSize-width={1024}
         shadow-mapSize-height={1024}
         shadow-bias={-0.0005}
       />
 
-      {/* FILL LIGHT — cool blue, from left, softer */}
+      {/* FILL — cool, from left, balances key */}
       <directionalLight
-        position={[-4, 3, 1]}
-        intensity={0.3}
-        color="#A0B8E0"
+        position={[-4, 3, 2]}
+        intensity={0.5}
+        color="#A8BEE0"
       />
 
-      {/* RIM LIGHT — behind the desk, creates edge separation */}
+      {/* RIM — from behind desk, creates edge glow on monitor bezel */}
       <directionalLight
-        position={[0, 2, -4]}
-        intensity={0.45}
-        color="#C0D0FF"
+        position={[0, 2.5, -4]}
+        intensity={0.6}
+        color="#D0E0FF"
       />
 
-      {/* ACCENT — indigo bounce from below-right */}
+      {/* FRONT FILL — low, from viewer direction, lifts desk surface */}
+      <directionalLight
+        position={[1, 1.5, 5]}
+        intensity={0.35}
+        color="#E8E0D0"
+      />
+
+      {/* ACCENT — indigo identity bounce */}
       <pointLight
         position={[1.5, 0.5, 1.5]}
-        intensity={0.6}
+        intensity={0.8}
         color="#6366f1"
         distance={6}
         decay={2}
       />
 
-      {/* Secondary accent — subtle warm from lamp side */}
+      {/* Desk lamp practical — warm pool */}
       <pointLight
         position={[-1.3, 1.8, -0.3]}
-        intensity={0.3}
+        intensity={0.5}
         color="#FFE0A0"
         distance={4}
         decay={2}
@@ -1025,9 +1021,9 @@ export default function Scene3D({ tier, scrollProgress }: Scene3DProps) {
         alpha: false,
         stencil: false,
         toneMapping: THREE.ACESFilmicToneMapping,
-        toneMappingExposure: 1.4,
+        toneMappingExposure: 1.6,
       }}
-      camera={{ position: [0.8, 1.3, 3.5], fov: 42, near: 0.1, far: 100 }}
+      camera={{ position: [3.5, 2.2, 3.0], fov: 38, near: 0.1, far: 100 }}
       performance={{ min: 0.5 }}
     >
       <SceneContent tier={tier} scrollProgress={scrollProgress} />
