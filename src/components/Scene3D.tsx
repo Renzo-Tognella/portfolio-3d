@@ -262,14 +262,17 @@ function Monitor({ scrollProgress }: { scrollProgress: number }) {
       {/* Bezel */}
       <mesh castShadow>
         <boxGeometry args={[1.8, 1.1, 0.06]} />
-        {MAT.metal("#1a1a2e")}
+        <meshStandardMaterial color="#1a1a2e" roughness={0.25} metalness={0.6} />
       </mesh>
-      {/* Screen — with RenderTexture when on, plain black when off */}
+      {/* Screen — always has a faint standby glow, intensifies on scroll */}
       <mesh ref={screenRef} position={[0, 0, 0.035]}>
         <planeGeometry args={[1.65, 0.95]} />
         <meshStandardMaterial
-          emissive={isScreenOn ? "#6366f1" : "#000000"}
-          emissiveIntensity={0}
+          emissive={isScreenOn ? "#6366f1" : "#1a1a3a"}
+          emissiveIntensity={isScreenOn ? 0 : 0.15}
+          color="#0a0a14"
+          roughness={0.1}
+          metalness={0.1}
           toneMapped={false}
         >
           {isScreenOn && (
@@ -317,11 +320,18 @@ function SecondMonitor() {
     <group position={[-1.1, 0.79, -0.2]} rotation={[0, 0.35, 0]}>
       <mesh castShadow>
         <boxGeometry args={[1.2, 0.8, 0.05]} />
-        {MAT.metal("#1a1a2e")}
+        <meshStandardMaterial color="#1a1a2e" roughness={0.25} metalness={0.6} />
       </mesh>
       <mesh position={[0, 0, 0.03]}>
         <planeGeometry args={[1.05, 0.65]} />
-        {MAT.emissive("#1E3A5F", 0.2)}
+        <meshStandardMaterial
+          color="#0d1520"
+          emissive="#1E3A5F"
+          emissiveIntensity={0.3}
+          roughness={0.1}
+          metalness={0.1}
+          toneMapped={false}
+        />
       </mesh>
       <mesh position={[0, -0.45, 0]}>
         <cylinderGeometry args={[0.03, 0.05, 0.15, 8]} />
@@ -871,6 +881,45 @@ function Floor() {
 }
 
 // ---------------------------------------------------------------------------
+// Back Wall — dark but visible, gives monitors something to sit against
+// ---------------------------------------------------------------------------
+function BackWall() {
+  return (
+    <group position={[0, 2.5, -1.8]}>
+      {/* Main wall */}
+      <mesh receiveShadow>
+        <planeGeometry args={[8, 5]} />
+        <meshStandardMaterial color="#151520" roughness={0.9} metalness={0.05} />
+      </mesh>
+      {/* Subtle warm gradient strip at desk level (bounced desk lamp light) */}
+      <mesh position={[0, -1.3, 0.01]}>
+        <planeGeometry args={[4, 0.6]} />
+        <meshStandardMaterial
+          color="#2A2030"
+          emissive="#FFE0A0"
+          emissiveIntensity={0.03}
+          roughness={1}
+          transparent
+          opacity={0.4}
+        />
+      </mesh>
+      {/* Indigo accent strip higher up */}
+      <mesh position={[0, 0.5, 0.01]}>
+        <planeGeometry args={[3, 0.3]} />
+        <meshStandardMaterial
+          color="#1A1A30"
+          emissive="#6366f1"
+          emissiveIntensity={0.04}
+          roughness={1}
+          transparent
+          opacity={0.3}
+        />
+      </mesh>
+    </group>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Lights — bright cinematic 3-point for dark scene visibility
 // ---------------------------------------------------------------------------
 function Lights() {
@@ -972,6 +1021,7 @@ function SceneContent({ tier, scrollProgress }: Scene3DProps) {
 
       <Lights />
       <Floor />
+      <BackWall />
 
       {/* Desk setup */}
       <Chair />
