@@ -47,6 +47,171 @@
   }
 }
 
+/* ── Project card scroll-reveal animations ── */
+
+@keyframes projectCardIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes projectNumberIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes projectPillIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Base (hidden) states */
+.project-card {
+  opacity: 0;
+  transform: translateY(30px);
+}
+
+.project-card.is-visible {
+  animation: projectCardIn 0.7s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
+  animation-delay: var(--stagger, 0ms);
+}
+
+.project-number {
+  opacity: 0;
+  transform: scale(0.8);
+}
+
+.project-number.is-visible {
+  animation: projectNumberIn 0.6s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
+  /* Numbers appear 200ms before their card */
+  animation-delay: calc(var(--stagger, 0ms) - 200ms);
+}
+
+.project-pill {
+  opacity: 0;
+  transform: scale(0.8);
+}
+
+.project-pill.is-visible {
+  animation: projectPillIn 0.5s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
+  animation-delay: var(--stagger, 0ms);
+}
+
+/* Respect reduced motion — skip all project animations */
+@media (prefers-reduced-motion: reduce) {
+  .project-card,
+  .project-number,
+  .project-pill {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+}
+
+/* ── Skills section — Constellation Grid animations ── */
+
+@keyframes skillCardIn {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes skillTitleIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes skillBarIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Base (hidden) states */
+.skill-card {
+  opacity: 0;
+  transform: translateY(40px);
+}
+
+.skill-card.is-visible {
+  animation: skillCardIn 0.7s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
+  animation-delay: var(--stagger, 0ms);
+}
+
+.skill-card-title {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.skill-card.is-visible .skill-card-title {
+  animation: skillTitleIn 0.5s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
+  animation-delay: calc(var(--stagger, 0ms) + 200ms);
+}
+
+.skill-bar-row {
+  opacity: 0;
+}
+
+.skill-card.is-visible .skill-bar-row {
+  animation: skillBarIn 0.4s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
+  animation-delay: calc(var(--stagger, 0ms) + 300ms + var(--bar-stagger, 0ms));
+}
+
+.skill-bar-fill {
+  transition: width 600ms cubic-bezier(0.215, 0.61, 0.355, 1);
+}
+
+/* Respect reduced motion — skip all skill animations */
+@media (prefers-reduced-motion: reduce) {
+  .skill-card,
+  .skill-card-title,
+  .skill-bar-row {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+
+  .skill-bar-fill {
+    transition: none;
+  }
+
+  .skill-svg-path {
+    stroke-dashoffset: 0 !important;
+    transition: none !important;
+  }
+}
+
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--accent) var(--surface);
