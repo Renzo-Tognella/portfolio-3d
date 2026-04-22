@@ -1,13 +1,40 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, Component } from "react";
+import type { ReactNode } from "react";
 
 // Lazy load the 3D scene — never SSR
 const Scene3D = dynamic(() => import("@/components/Scene3D"), {
   ssr: false,
   loading: () => <HeroSkeleton />,
 });
+
+// ---------------------------------------------------------------------------
+// Error Boundary for 3D scene crashes
+// ---------------------------------------------------------------------------
+class SceneErrorBoundary extends Component<
+  { children: ReactNode; fallback: ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: { children: ReactNode; fallback: ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: unknown, info: unknown) {
+    console.error("[Scene3D] Canvas crashed:", error, info);
+  }
+
+  render() {
+    if (this.state.hasError) return this.props.fallback;
+    return this.props.children;
+  }
+}
 
 function HeroSkeleton() {
   return (
@@ -68,7 +95,6 @@ function useScrollProgress() {
     const handleScroll = () => {
       const scrollY = window.scrollY;
       const windowH = window.innerHeight;
-      // Progress from 0 (top) to 1 (scrolled 1 viewport)
       const p = Math.min(scrollY / windowH, 1);
       setProgress(p);
     };
@@ -117,7 +143,9 @@ export function Hero() {
   return (
     <section id="hero" className="relative h-screen w-full">
       <div className="absolute inset-0">
-        <Scene3D tier={tier} scrollProgress={scrollProgress} />
+        <SceneErrorBoundary fallback={<StaticHero />}>
+          <Scene3D tier={tier} scrollProgress={scrollProgress} />
+        </SceneErrorBoundary>
       </div>
 
       {/* Overlay content — fades out on scroll */}

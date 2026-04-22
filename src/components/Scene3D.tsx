@@ -11,7 +11,6 @@ import {
   OrbitControls,
   Html,
 } from "@react-three/drei";
-import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import * as THREE from "three";
 
 // ---------------------------------------------------------------------------
@@ -340,20 +339,10 @@ function Lights() {
 }
 
 // ---------------------------------------------------------------------------
-// Post-processing (Bloom) — high tier only
+// Post-processing (Bloom) — disabled temporarily
+// postprocessing@6.x + three@0.184 has getContextAttributes() null crash.
+// TODO: Re-enable when postprocessing fixes compatibility.
 // ---------------------------------------------------------------------------
-function PostProcessing() {
-  return (
-    <EffectComposer>
-      <Bloom
-        intensity={0.8}
-        luminanceThreshold={0.6}
-        luminanceSmoothing={0.9}
-        mipmapBlur
-      />
-    </EffectComposer>
-  );
-}
 
 // ---------------------------------------------------------------------------
 // Scene content with quality tiers
@@ -404,7 +393,6 @@ function SceneContent({ tier, scrollProgress }: Scene3DProps) {
         blur={2}
         far={3}
       />
-      {quality === "high" && <PostProcessing />}
     </>
   );
 }
