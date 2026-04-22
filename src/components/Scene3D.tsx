@@ -415,26 +415,16 @@ function SceneContent({ tier, scrollProgress }: Scene3DProps) {
 export default function Scene3D({ tier, scrollProgress }: Scene3DProps) {
   const dpr: [number, number] = tier === "high" ? [1, 1.5] : [1, 1];
 
-  // Use callback form for gl to avoid Turbopack/R3F v9 null-reference bug
-  // (Cannot read properties of null (reading 'alpha'))
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const glConfig = useCallback(
-    (defaultProps: any) =>
-      new THREE.WebGLRenderer({
-        ...defaultProps,
-        antialias: tier !== "low",
-        powerPreference: "high-performance",
-        alpha: true,
-        stencil: false,
-      }),
-    [tier]
-  );
-
   return (
     <Canvas
       dpr={dpr}
       frameloop="always"
-      gl={glConfig}
+      gl={{
+        antialias: tier !== "low",
+        powerPreference: "high-performance",
+        alpha: true,
+        stencil: false,
+      }}
       camera={{ position: [0, 1.5, 3.5], fov: 50 }}
       performance={{ min: 0.5 }}
       style={{ background: "transparent" }}
