@@ -62,15 +62,15 @@ const MAT = {
 // ---------------------------------------------------------------------------
 const CAMERA_KEYFRAMES = [
   // Phase 0: Wide diagonal establishing — monitor visible, desk context
-  { progress: 0.0, pos: new THREE.Vector3(3.5, 2.2, 3.0), fov: 38, lookAt: new THREE.Vector3(0, 1.0, -0.2) },
+  { progress: 0.0, pos: new THREE.Vector3(3.5, 2.5, 3.0), fov: 38, lookAt: new THREE.Vector3(0, 1.5, -0.3) },
   // Phase 1: Drift closer, slight descent
-  { progress: 0.2, pos: new THREE.Vector3(2.5, 1.8, 2.2), fov: 36, lookAt: new THREE.Vector3(0, 1.0, -0.25) },
+  { progress: 0.2, pos: new THREE.Vector3(2.5, 2.1, 2.2), fov: 36, lookAt: new THREE.Vector3(0, 1.45, -0.3) },
   // Phase 2: Tighter — monitor dominates frame
-  { progress: 0.45, pos: new THREE.Vector3(1.2, 1.3, 1.4), fov: 32, lookAt: new THREE.Vector3(0, 0.95, -0.3) },
+  { progress: 0.45, pos: new THREE.Vector3(1.2, 1.7, 1.4), fov: 32, lookAt: new THREE.Vector3(0, 1.4, -0.3) },
   // Phase 3: Very close — screen content legible
-  { progress: 0.7, pos: new THREE.Vector3(0.4, 1.0, 0.7), fov: 26, lookAt: new THREE.Vector3(0, 0.85, -0.35) },
+  { progress: 0.7, pos: new THREE.Vector3(0.4, 1.4, 0.7), fov: 26, lookAt: new THREE.Vector3(0, 1.3, -0.3) },
   // Phase 4: Final — right at the monitor screen
-  { progress: 1.0, pos: new THREE.Vector3(0.05, 0.88, 0.25), fov: 20, lookAt: new THREE.Vector3(0, 0.82, -0.35) },
+  { progress: 1.0, pos: new THREE.Vector3(0.05, 1.3, 0.25), fov: 20, lookAt: new THREE.Vector3(0, 1.25, -0.35) },
 ];
 
 function DiveCamera({ scrollProgress }: { scrollProgress: number }) {
@@ -258,11 +258,11 @@ function Monitor({ scrollProgress }: { scrollProgress: number }) {
   const isScreenOn = scrollProgress > 0.28;
 
   return (
-    <group position={[0, 0.79, -0.35]}>
+    <group position={[0, 1.5, -0.35]}>
       {/* Bezel */}
       <mesh castShadow>
         <boxGeometry args={[1.8, 1.1, 0.06]} />
-        <meshStandardMaterial color="#1a1a2e" roughness={0.25} metalness={0.6} />
+        <meshStandardMaterial color="#22223a" roughness={0.25} metalness={0.6} />
       </mesh>
       {/* Screen — always has a faint standby glow, intensifies on scroll */}
       <mesh ref={screenRef} position={[0, 0, 0.035]}>
@@ -317,10 +317,10 @@ function Monitor({ scrollProgress }: { scrollProgress: number }) {
 // ---------------------------------------------------------------------------
 function SecondMonitor() {
   return (
-    <group position={[-1.1, 0.79, -0.2]} rotation={[0, 0.35, 0]}>
+    <group position={[-1.1, 1.35, -0.15]} rotation={[0, 0.35, 0]}>
       <mesh castShadow>
         <boxGeometry args={[1.2, 0.8, 0.05]} />
-        <meshStandardMaterial color="#1a1a2e" roughness={0.25} metalness={0.6} />
+        <meshStandardMaterial color="#22223a" roughness={0.25} metalness={0.6} />
       </mesh>
       <mesh position={[0, 0, 0.03]}>
         <planeGeometry args={[1.05, 0.65]} />
@@ -729,7 +729,7 @@ function FloatingDust({ count }: { count: number }) {
 // ---------------------------------------------------------------------------
 function Chair() {
   return (
-    <group position={[1.8, 0, 0.8]} rotation={[0, Math.PI * 0.6, 0]}>
+    <group position={[2.8, 0, 1.8]} rotation={[0, Math.PI * 0.7, 0]}>
       {/* Seat */}
       <mesh position={[0, 0.55, 0]} castShadow>
         <boxGeometry args={[0.55, 0.06, 0.5]} />
@@ -818,16 +818,16 @@ function Rug() {
 // ---------------------------------------------------------------------------
 function RubyFrame() {
   return (
-    <group position={[0, 2.2, -1.5]} rotation={[0, 0, 0]}>
+    <group position={[0, 2.6, -1.5]} rotation={[0, 0, 0]}>
       {/* Frame outer */}
       <mesh castShadow>
         <boxGeometry args={[1.2, 1.2, 0.06]} />
-        {MAT.wood("#3E2723")}
+        <meshStandardMaterial color="#3E2723" roughness={0.7} metalness={0.05} />
       </mesh>
       {/* Frame inner (matte) */}
       <mesh position={[0, 0, 0.035]}>
         <boxGeometry args={[1.0, 1.0, 0.01]} />
-        <meshStandardMaterial color="#1a1a2e" roughness={0.9} />
+        <meshStandardMaterial color="#1e1e35" roughness={0.9} />
       </mesh>
       {/* Ruby gem — diamond shape */}
       <group position={[0, 0.05, 0.05]}>
@@ -857,8 +857,8 @@ function RubyFrame() {
         <planeGeometry args={[0.5, 0.12]} />
         <meshStandardMaterial color="#CC342D" emissive="#CC342D" emissiveIntensity={0.15} roughness={0.8} />
       </mesh>
-      {/* Subtle point light on frame */}
-      <pointLight position={[0, 0, 0.5]} color="#CC342D" intensity={0.5} distance={2} decay={2} />
+      {/* Point light on frame — boosted for visibility from camera */}
+      <pointLight position={[0, 0, 0.5]} color="#CC342D" intensity={1.0} distance={3} decay={2} />
     </group>
   );
 }
@@ -1004,7 +1004,7 @@ function SceneContent({ tier, scrollProgress }: Scene3DProps) {
         autoRotateSpeed={0.15}
         enableDamping
         dampingFactor={0.05}
-        target={[0, 1.0, -0.3]}
+        target={[0, 1.5, -0.3]}
       />
 
       <Lights />
@@ -1061,7 +1061,7 @@ export default function Scene3D({ tier, scrollProgress }: Scene3DProps) {
         toneMapping: THREE.ACESFilmicToneMapping,
         toneMappingExposure: 1.6,
       }}
-      camera={{ position: [3.5, 2.2, 3.0], fov: 38, near: 0.1, far: 100 }}
+      camera={{ position: [3.5, 2.5, 3.0], fov: 38, near: 0.1, far: 100 }}
       performance={{ min: 0.5 }}
     >
       <SceneContent tier={tier} scrollProgress={scrollProgress} />
