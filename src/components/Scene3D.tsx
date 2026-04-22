@@ -881,35 +881,23 @@ function Floor() {
 }
 
 // ---------------------------------------------------------------------------
-// Back Wall — dark but visible, gives monitors something to sit against
+// Back Wall — far behind desk, acts as room backdrop
 // ---------------------------------------------------------------------------
 function BackWall() {
   return (
-    <group position={[0, 2.5, -1.8]}>
+    <group position={[0, 3, -4]}>
       {/* Main wall */}
-      <mesh receiveShadow>
-        <planeGeometry args={[8, 5]} />
-        <meshStandardMaterial color="#151520" roughness={0.9} metalness={0.05} />
+      <mesh>
+        <planeGeometry args={[14, 8]} />
+        <meshStandardMaterial color="#13131f" roughness={0.95} metalness={0} />
       </mesh>
-      {/* Subtle warm gradient strip at desk level (bounced desk lamp light) */}
-      <mesh position={[0, -1.3, 0.01]}>
-        <planeGeometry args={[4, 0.6]} />
+      {/* Subtle warm bounce at desk level */}
+      <mesh position={[0, -1.5, 0.01]}>
+        <planeGeometry args={[6, 1]} />
         <meshStandardMaterial
-          color="#2A2030"
+          color="#1A1828"
           emissive="#FFE0A0"
-          emissiveIntensity={0.03}
-          roughness={1}
-          transparent
-          opacity={0.4}
-        />
-      </mesh>
-      {/* Indigo accent strip higher up */}
-      <mesh position={[0, 0.5, 0.01]}>
-        <planeGeometry args={[3, 0.3]} />
-        <meshStandardMaterial
-          color="#1A1A30"
-          emissive="#6366f1"
-          emissiveIntensity={0.04}
+          emissiveIntensity={0.02}
           roughness={1}
           transparent
           opacity={0.3}
@@ -1003,7 +991,7 @@ function SceneContent({ tier, scrollProgress }: Scene3DProps) {
 
       {/* Background + Fog */}
       <color attach="background" args={["#0a0a12"]} />
-      <fog attach="fog" args={["#0a0a12", 6, 18]} />
+      <fog attach="fog" args={["#0a0a12", 6, 22]} />
 
       <DiveCamera scrollProgress={scrollProgress} />
       <OrbitControls
