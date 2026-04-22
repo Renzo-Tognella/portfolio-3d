@@ -56,7 +56,7 @@ function HeroSkeleton() {
 }
 
 // ---------------------------------------------------------------------------
-// Device tier detection (unchanged)
+// Device tier detection
 // ---------------------------------------------------------------------------
 function useDeviceTier() {
   const [tier, setTier] = useState<"high" | "medium" | "low" | "none">("none");
@@ -121,42 +121,59 @@ function StaticHero() {
 }
 
 // ---------------------------------------------------------------------------
-// Hero — GSAP ScrollTrigger "Dive Into Screen" scroll infrastructure
+// Hero — GSAP ScrollTrigger "Dive Into Screen" + snap transition
+//
+// Layout:
+//   <section ref={heroSectionRef}>
+//     <div data-scroll-spacer className="h-[300vh]">
+//       <div ref={canvasWrapperRef} className="sticky top-0 h-screen">
+//         <Canvas />
+//         <TextOverlay />
+//         <ScrollIndicator />
+//         <FlashOverlay />  ← brief white flash on snap
+//       </div>
+//     </div>
+//   </section>
+//   <About />  ← normal flow below
+//
+// Transition behavior:
+//   - 0%–85%: smooth dive animation, text fades early
+//   - 85%–92%: canvas fades to 0 FAST
+//   - At 92%: canvas gets display:none (hard snap)
+//   - User scrolls into About — feels like a new screen
+//   - Scrolling BACK: once progress drops below 85%, canvas reappears
 // ---------------------------------------------------------------------------
 export function Hero() {
   const tier = useDeviceTier();
   const [mounted, setMounted] = useState(false);
 
-  // Ref-driven scroll progress — GSAP writes here on every scroll tick.
-  // This is the canonical progress value; no React re-render per tick.
+  // Ref-driven scroll progress
   const progressRef = useRef(0);
 
-  // Synced state for Scene3D's number prop (Phase 1 bridge).
-  // Updated via rAF loop — capped at 60fps, avoids excessive re-renders.
+  // Synced state for Scene3D
   const [scrollProgress, setScrollProgress] = useState(0);
   const rafIdRef = useRef(0);
   const lastSyncedRef = useRef(0);
 
-  // DOM refs for GSAP targeting
+  // DOM refs
   const heroSectionRef = useRef<HTMLElement>(null);
   const canvasWrapperRef = useRef<HTMLDivElement>(null);
   const textOverlayRef = useRef<HTMLDivElement>(null);
   const scrollIndicatorRef = useRef<HTMLDivElement>(null);
+  const flashRef = useRef<HTMLDivElement>(null);
 
-  // Force a single re-render after mount so Scene3D hydrates correctly
+  // Force mount
   useEffect(() => {
     const timer = setTimeout(() => setMounted(true), 100);
     return () => clearTimeout(timer);
   }, []);
 
   // rAF loop: sync progressRef → scrollProgress state at ~60fps
-  // Only triggers setState when value actually changes (throttled by rAF)
   useEffect(() => {
     if (!mounted) return;
 
     const sync = () => {
       const current = progressRef.current;
-      // Only update state if value changed beyond floating-point noise
       if (Math.abs(current - lastSyncedRef.current) > 0.0005) {
         lastSyncedRef.current = current;
         setScrollProgress(current);
@@ -170,24 +187,6 @@ export function Hero() {
 
   // -----------------------------------------------------------------------
   // GSAP ScrollTrigger setup
-  //
-  // Layout:
-  //   <section ref={heroSectionRef}>   ← position: relative
-  //     <div className="h-[400vh]">    ← tall scroll spacer
-  //       <div ref={canvasWrapperRef}> ← position: sticky; top: 0; h-screen
-  //         <Canvas />                 ← fills sticky container
-  //       </div>
-  //     </div>
-  //   </section>
-  //   <About />                        ← normal section below
-  //
-  // ScrollTrigger is attached to the spacer. As the user scrolls through
-  // 400 vh of space, progressRef animates from 0 → 1.
-  //
-  // Side-effects driven by progress:
-  //   • Text overlay:     fades out at 0–25% progress
-  //   • Scroll indicator: fades out at 0–12% progress
-  //   • Canvas wrapper:   fades to 0.15 opacity at 85–100% progress
   // -----------------------------------------------------------------------
   useGSAP(
     () => {
@@ -198,34 +197,20 @@ export function Hero() {
       );
       if (!spacer) return;
 
-      // Main scroll progress timeline (0 → 1 over the full spacer height)
-      const tl = gsap.timeline({
+      // Main progress tracker
+      gsap.timeline({
         scrollTrigger: {
           trigger: spacer,
           start: "top top",
           end: "bottom bottom",
-          scrub: 0.5, // smooth 0.5s lag
+          scrub: 0.5,
           onUpdate: (self) => {
             progressRef.current = self.progress;
           },
         },
       });
 
-      // Canvas wrapper fade-out near end of animation (85% → 100%)
-      if (canvasWrapperRef.current) {
-        gsap.to(canvasWrapperRef.current, {
-          opacity: 0.15,
-          ease: "none",
-          scrollTrigger: {
-            trigger: spacer,
-            start: "85% top",
-            end: "bottom bottom",
-            scrub: 0.5,
-          },
-        });
-      }
-
-      // Text overlay: fade out over first 25% of scroll
+      // Text overlay: fade out 0–20%
       if (textOverlayRef.current) {
         gsap.to(textOverlayRef.current, {
           opacity: 0,
@@ -233,13 +218,13 @@ export function Hero() {
           scrollTrigger: {
             trigger: spacer,
             start: "top top",
-            end: "25% top",
+            end: "20% top",
             scrub: 0.3,
           },
         });
       }
 
-      // Scroll indicator: fade out very quickly (first 12%)
+      // Scroll indicator: fade out 0–10%
       if (scrollIndicatorRef.current) {
         gsap.to(scrollIndicatorRef.current, {
           opacity: 0,
@@ -247,15 +232,52 @@ export function Hero() {
           scrollTrigger: {
             trigger: spacer,
             start: "top top",
-            end: "12% top",
+            end: "10% top",
             scrub: 0.2,
           },
         });
       }
+
+      // Canvas wrapper: FAST fade at 82–90% (not gradual!)
+      if (canvasWrapperRef.current) {
+        gsap.to(canvasWrapperRef.current, {
+          opacity: 0,
+          ease: "power2.in",
+          scrollTrigger: {
+            trigger: spacer,
+            start: "82% top",
+            end: "90% top",
+            scrub: 0.2,
+          },
+        });
+      }
+
+      // Flash overlay: brief burst at 85–90% then fade
+      if (flashRef.current) {
+        gsap
+          .timeline({
+            scrollTrigger: {
+              trigger: spacer,
+              start: "84% top",
+              end: "92% top",
+              scrub: 0.15,
+            },
+          })
+          .fromTo(
+            flashRef.current,
+            { opacity: 0 },
+            { opacity: 0.12, duration: 0.4, ease: "power2.in" }
+          )
+          .to(flashRef.current, {
+            opacity: 0,
+            duration: 0.6,
+            ease: "power2.out",
+          });
+      }
     },
     {
       scope: heroSectionRef,
-      dependencies: [mounted], // re-run after mount so DOM is ready
+      dependencies: [mounted],
     }
   );
 
@@ -264,6 +286,9 @@ export function Hero() {
   // -----------------------------------------------------------------------
   if (!mounted) return <HeroSkeleton />;
   if (tier === "none") return <StaticHero />;
+
+  // When canvas should be hidden (past the snap point)
+  const canvasHidden = scrollProgress > 0.91;
 
   // -----------------------------------------------------------------------
   // Render
@@ -274,19 +299,23 @@ export function Hero() {
       ref={heroSectionRef}
       className="relative w-full"
     >
-      {/* Tall scroll spacer — GSAP ScrollTrigger tracks this */}
-      <div data-scroll-spacer className="relative h-[400vh]">
-        {/* Sticky canvas container — stays fixed in viewport while spacer scrolls */}
+      {/* Scroll spacer — 300vh (reduced from 400vh for snappier feel) */}
+      <div data-scroll-spacer className="relative h-[300vh]">
+        {/* Sticky canvas container */}
         <div
           ref={canvasWrapperRef}
           className="sticky top-0 h-screen w-full"
-          style={{ opacity: 1 }}
+          style={{
+            opacity: 1,
+            // Hard snap: completely remove from flow when past transition
+            display: canvasHidden ? "none" : "block",
+          }}
         >
           <SceneErrorBoundary fallback={<StaticHero />}>
             <Scene3D tier={tier} scrollProgress={scrollProgress} />
           </SceneErrorBoundary>
 
-          {/* Text overlay — fades out during 0–25% scroll */}
+          {/* Text overlay — fades 0–20% */}
           <div
             ref={textOverlayRef}
             className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center"
@@ -303,7 +332,7 @@ export function Hero() {
             </p>
           </div>
 
-          {/* Scroll indicator — fades out during 0–12% scroll */}
+          {/* Scroll indicator — fades 0–10% */}
           <div
             ref={scrollIndicatorRef}
             className="absolute bottom-8 left-1/2 z-10 -translate-x-1/2"
@@ -314,6 +343,13 @@ export function Hero() {
               <div className="h-8 w-[1px] bg-gradient-to-b from-accent to-transparent animate-pulse" />
             </div>
           </div>
+
+          {/* Flash overlay — brief white burst during snap */}
+          <div
+            ref={flashRef}
+            className="pointer-events-none absolute inset-0 z-20 bg-white"
+            style={{ opacity: 0 }}
+          />
         </div>
       </div>
     </section>
