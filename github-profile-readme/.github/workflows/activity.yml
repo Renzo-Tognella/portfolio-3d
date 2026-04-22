@@ -1,0 +1,29 @@
+name: Update Activity Feed
+
+on:
+  schedule:
+    - cron: "0 2 * * *"  # Daily at 2am UTC
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update activity
+        uses: JamesIves/github-stats-readme@v1
+        with:
+          COMMIT_NAME: Renzo-Tognella
+          COMMIT_EMAIL: renzo@example.com
+          SECTION_NAME: activity
+          SHOW_LINES: 5
+
+      - name: Commit changes
+        run: |
+          git config user.name "Renzo-Tognella"
+          git config user.email "renzo@example.com"
+          git diff --quiet && echo "No changes" || git commit -am "chore: update activity feed"
+          git push
