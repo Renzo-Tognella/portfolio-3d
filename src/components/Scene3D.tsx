@@ -719,7 +719,7 @@ function FloatingDust({ count }: { count: number }) {
 // ---------------------------------------------------------------------------
 function Chair() {
   return (
-    <group position={[0.3, 0, 1.6]} rotation={[0, Math.PI, 0]}>
+    <group position={[1.8, 0, 0.8]} rotation={[0, Math.PI * 0.6, 0]}>
       {/* Seat */}
       <mesh position={[0, 0.55, 0]} castShadow>
         <boxGeometry args={[0.55, 0.06, 0.5]} />
