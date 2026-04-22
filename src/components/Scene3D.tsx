@@ -71,14 +71,14 @@ function CameraRig({ scrollProgress }: { scrollProgress: number }) {
     const t = scrollProgress;
     const eased = 1 - Math.pow(1 - t, 3);
 
-    // Start isometric, zoom in on scroll
-    const baseX = 6 + (2.5 - 6) * eased;
-    const baseY = 5 + (2 - 5) * eased;
-    const baseZ = 6 + (2.5 - 6) * eased;
+    // Start wider isometric, zoom in on scroll
+    const baseX = 8 + (3 - 8) * eased;
+    const baseY = 6.5 + (2.5 - 6.5) * eased;
+    const baseZ = 8 + (3 - 8) * eased;
 
     // Mouse parallax
-    const mx = mouse.current.x * 0.2 * (1 - eased * 0.6);
-    const my = -mouse.current.y * 0.12 * (1 - eased * 0.6);
+    const mx = mouse.current.x * 0.25 * (1 - eased * 0.6);
+    const my = -mouse.current.y * 0.15 * (1 - eased * 0.6);
 
     camera.position.lerp(
       new THREE.Vector3(baseX + mx, baseY + my, baseZ),
@@ -576,6 +576,145 @@ function FloatingDust({ count }: { count: number }) {
 }
 
 // ---------------------------------------------------------------------------
+// Office Chair
+// ---------------------------------------------------------------------------
+function Chair() {
+  return (
+    <group position={[0, 0, 1.3]} rotation={[0, Math.PI, 0]}>
+      {/* Seat */}
+      <mesh position={[0, 0.55, 0]} castShadow>
+        <boxGeometry args={[0.55, 0.06, 0.5]} />
+        {MAT.fabric("#2D3748")}
+      </mesh>
+      {/* Backrest */}
+      <mesh position={[0, 0.85, -0.22]} rotation={[0.1, 0, 0]} castShadow>
+        <boxGeometry args={[0.52, 0.55, 0.05]} />
+        {MAT.fabric("#2D3748")}
+      </mesh>
+      {/* Armrests */}
+      {[-0.3, 0.3].map((x, i) => (
+        <group key={i}>
+          {/* Armrest pad */}
+          <mesh position={[x, 0.68, 0.05]} castShadow>
+            <boxGeometry args={[0.06, 0.03, 0.25]} />
+            {MAT.plastic("#3A3A3A")}
+          </mesh>
+          {/* Armrest support */}
+          <mesh position={[x, 0.6, -0.05]}>
+            <boxGeometry args={[0.04, 0.12, 0.04]} />
+            {MAT.metal("#444")}
+          </mesh>
+        </group>
+      ))}
+      {/* Central column */}
+      <mesh position={[0, 0.35, 0]}>
+        <cylinderGeometry args={[0.03, 0.03, 0.25, 8]} />
+        {MAT.metal("#444")}
+      </mesh>
+      {/* Gas lift cover */}
+      <mesh position={[0, 0.5, 0]}>
+        <cylinderGeometry args={[0.04, 0.03, 0.08, 8]} />
+        {MAT.metal("#333")}
+      </mesh>
+      {/* Base star */}
+      {[0, 1, 2, 3, 4].map((i) => {
+        const angle = (i / 5) * Math.PI * 2;
+        return (
+          <mesh key={i} position={[Math.sin(angle) * 0.22, 0.15, Math.cos(angle) * 0.22]} rotation={[0, -angle, 0]}>
+            <boxGeometry args={[0.04, 0.03, 0.3]} />
+            {MAT.metal("#444")}
+          </mesh>
+        );
+      })}
+      {/* Wheels */}
+      {[0, 1, 2, 3, 4].map((i) => {
+        const angle = (i / 5) * Math.PI * 2;
+        return (
+          <mesh key={`w${i}`} position={[Math.sin(angle) * 0.38, 0.06, Math.cos(angle) * 0.38]}>
+            <sphereGeometry args={[0.03, 6, 6]} />
+            {MAT.plastic("#222")}
+          </mesh>
+        );
+      })}
+    </group>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Rug
+// ---------------------------------------------------------------------------
+function Rug() {
+  return (
+    <group>
+      <mesh position={[0, 0.005, 0.6]} rotation={[-Math.PI / 2, 0, 0.1]} receiveShadow>
+        <planeGeometry args={[3.5, 2.5]} />
+        <meshStandardMaterial color="#2A1F3D" roughness={0.95} metalness={0} />
+      </mesh>
+      {/* Rug border */}
+      <mesh position={[0, 0.006, 0.6]} rotation={[-Math.PI / 2, 0, 0.1]}>
+        <planeGeometry args={[3.6, 2.6]} />
+        <meshStandardMaterial color="#3B2D50" roughness={0.9} metalness={0} />
+      </mesh>
+      {/* Rug inner pattern */}
+      <mesh position={[0, 0.007, 0.6]} rotation={[-Math.PI / 2, 0, 0.1]}>
+        <planeGeometry args={[2.8, 1.8]} />
+        <meshStandardMaterial color="#33244A" roughness={0.9} metalness={0} />
+      </mesh>
+    </group>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Ruby Logo Frame on Wall
+// ---------------------------------------------------------------------------
+function RubyFrame() {
+  return (
+    <group position={[0, 2.2, -1.5]} rotation={[0, 0, 0]}>
+      {/* Frame outer */}
+      <mesh castShadow>
+        <boxGeometry args={[1.2, 1.2, 0.06]} />
+        {MAT.wood("#3E2723")}
+      </mesh>
+      {/* Frame inner (matte) */}
+      <mesh position={[0, 0, 0.035]}>
+        <boxGeometry args={[1.0, 1.0, 0.01]} />
+        <meshStandardMaterial color="#1a1a2e" roughness={0.9} />
+      </mesh>
+      {/* Ruby gem — diamond shape */}
+      <group position={[0, 0.05, 0.05]}>
+        {/* Top facet (lighter) */}
+        <mesh position={[0, 0.1, 0]}>
+          <planeGeometry args={[0.35, 0.2]} />
+          <meshStandardMaterial color="#CC342D" roughness={0.2} metalness={0.3} side={THREE.DoubleSide} />
+        </mesh>
+        {/* Bottom left facet (darker) */}
+        <mesh position={[-0.09, -0.05, 0]} rotation={[0, 0, 0.15]}>
+          <planeGeometry args={[0.2, 0.3]} />
+          <meshStandardMaterial color="#9B1B12" roughness={0.2} metalness={0.3} side={THREE.DoubleSide} />
+        </mesh>
+        {/* Bottom right facet (medium) */}
+        <mesh position={[0.09, -0.05, 0]} rotation={[0, 0, -0.15]}>
+          <planeGeometry args={[0.2, 0.3]} />
+          <meshStandardMaterial color="#B5221B" roughness={0.2} metalness={0.3} side={THREE.DoubleSide} />
+        </mesh>
+        {/* Outline glow */}
+        <mesh>
+          <ringGeometry args={[0.38, 0.42, 6]} />
+          <meshBasicMaterial color="#CC342D" transparent opacity={0.15} side={THREE.DoubleSide} />
+        </mesh>
+      </group>
+      {/* "Ruby" text */}
+      <mesh position={[0, -0.35, 0.05]}>
+        <planeGeometry args={[0.5, 0.12]} />
+        <meshStandardMaterial color="#CC342D" emissive="#CC342D" emissiveIntensity={0.15} roughness={0.8} />
+      </mesh>
+      {/* Subtle point light on frame */}
+      <pointLight position={[0, 0, 0.5]} color="#CC342D" intensity={0.5} distance={2} decay={2} />
+    </group>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Floor
 // ---------------------------------------------------------------------------
 function Floor() {
@@ -637,7 +776,7 @@ function SceneContent({ tier, scrollProgress }: Scene3DProps) {
 
       {/* Background + Fog */}
       <color attach="background" args={["#0a0a12"]} />
-      <fog attach="fog" args={["#0a0a12", 8, 20]} />
+      <fog attach="fog" args={["#0a0a12", 12, 25]} />
 
       <CameraRig scrollProgress={scrollProgress} />
       <OrbitControls
@@ -656,6 +795,9 @@ function SceneContent({ tier, scrollProgress }: Scene3DProps) {
       <Floor />
 
       {/* Desk setup */}
+      <Chair />
+      <Rug />
+      <RubyFrame />
       <Desk />
       <Monitor />
       <SecondMonitor />
@@ -702,7 +844,7 @@ export default function Scene3D({ tier, scrollProgress }: Scene3DProps) {
         toneMapping: THREE.ACESFilmicToneMapping,
         toneMappingExposure: 1.2,
       }}
-      camera={{ position: [6, 5, 6], fov: 32, near: 0.1, far: 100 }}
+      camera={{ position: [8, 6.5, 8], fov: 36, near: 0.1, far: 100 }}
       performance={{ min: 0.5 }}
     >
       <SceneContent tier={tier} scrollProgress={scrollProgress} />
