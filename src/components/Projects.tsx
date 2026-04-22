@@ -4,7 +4,7 @@ const PROJECTS = [
     description:
       "Plataforma de busca e agregação de dados com arquitetura distribuída e pipeline de processamento em tempo real.",
     tech: ["TypeScript", "Next.js", "AWS", "Docker"],
-    github: "#",
+    github: "https://github.com/Renzo-Tognella/TheSearch",
     live: "#",
   },
   {
@@ -12,7 +12,7 @@ const PROJECTS = [
     description:
       "Simulação evolutiva em Unity com algoritmos genéticos e neuroevolution. Benchmarks de stress com 10K+ épocas.",
     tech: ["C#", "Unity", "Python", "ML-Agents"],
-    github: "#",
+    github: "https://github.com/Renzo-Tognella/EvoArena",
     live: "#",
   },
   {
@@ -20,7 +20,7 @@ const PROJECTS = [
     description:
       "Sistema de engenharia de software com IA — doc-first, multi-agent, governance. Profile SE-Chief.",
     tech: ["TypeScript", "Python", "Docker", "MCP"],
-    github: "#",
+    github: "https://github.com/Renzo-Tognella/TheSearch",
     live: "#",
   },
 ];

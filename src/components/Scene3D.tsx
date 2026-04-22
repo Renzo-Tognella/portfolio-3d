@@ -8,7 +8,10 @@ import {
   Sparkles,
   ContactShadows,
   PerformanceMonitor,
+  OrbitControls,
+  Html,
 } from "@react-three/drei";
+import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import * as THREE from "three";
 
 // ---------------------------------------------------------------------------
@@ -18,6 +21,21 @@ interface Scene3DProps {
   tier: "high" | "medium" | "low";
   scrollProgress: number;
 }
+
+// ---------------------------------------------------------------------------
+// Skill categories for tooltip display
+// ---------------------------------------------------------------------------
+const SKILL_CATEGORIES: Record<string, string> = {
+  TypeScript: "Language",
+  React: "Framework",
+  "Node.js": "Runtime",
+  AWS: "Cloud",
+  Docker: "DevOps",
+  Python: "Language",
+  "Next.js": "Framework",
+  Git: "Tool",
+  SQL: "Database",
+};
 
 // ---------------------------------------------------------------------------
 // Shared node positions (used by nodes + connection lines)
@@ -179,20 +197,27 @@ function Desk() {
 }
 
 // ---------------------------------------------------------------------------
-// Skill/Project Nodes (floating spheres with labels)
+// Skill/Project Nodes (floating spheres with labels + hover tooltips)
 // ---------------------------------------------------------------------------
 function SkillNode({
   position,
   label,
   color = "#6366f1",
   size = 0.08,
+  hoveredNode,
+  onHover,
+  onUnhover,
 }: {
   position: [number, number, number];
   label: string;
   color?: string;
   size?: number;
+  hoveredNode: string | null;
+  onHover: () => void;
+  onUnhover: () => void;
 }) {
   const meshRef = useRef<THREE.Mesh>(null);
+  const isHovered = hoveredNode === label;
 
   useFrame((state) => {
     if (meshRef.current) {
@@ -201,10 +226,23 @@ function SkillNode({
     }
   });
 
+  const scale = isHovered ? 1.3 : 1;
+
   return (
     <Float speed={1.5} rotationIntensity={0} floatIntensity={0.3}>
       <group position={position}>
-        <mesh ref={meshRef}>
+        <mesh
+          ref={meshRef}
+          scale={scale}
+          onPointerOver={(e) => {
+            e.stopPropagation();
+            onHover();
+          }}
+          onPointerOut={(e) => {
+            e.stopPropagation();
+            onUnhover();
+          }}
+        >
           <sphereGeometry args={[size, 16, 16]} />
           <meshStandardMaterial
             color={color}
@@ -223,6 +261,17 @@ function SkillNode({
         >
           {label}
         </Text>
+        {isHovered && (
+          <Html center distanceFactor={10}>
+            <div
+              className="pointer-events-none select-none rounded-lg border border-indigo-500/50 bg-gray-900/90 px-3 py-2 text-sm text-white whitespace-nowrap"
+              style={{ fontFamily: "system-ui, sans-serif" }}
+            >
+              <div className="font-semibold">{label}</div>
+              <div className="text-xs text-indigo-300">{SKILL_CATEGORIES[label] ?? "Skill"}</div>
+            </div>
+          </Html>
+        )}
       </group>
     </Float>
   );
@@ -291,10 +340,27 @@ function Lights() {
 }
 
 // ---------------------------------------------------------------------------
+// Post-processing (Bloom) — high tier only
+// ---------------------------------------------------------------------------
+function PostProcessing() {
+  return (
+    <EffectComposer>
+      <Bloom
+        intensity={0.8}
+        luminanceThreshold={0.6}
+        luminanceSmoothing={0.9}
+        mipmapBlur
+      />
+    </EffectComposer>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Scene content with quality tiers
 // ---------------------------------------------------------------------------
 function SceneContent({ tier, scrollProgress }: Scene3DProps) {
   const [quality, setQuality] = useState(tier);
+  const [hoveredNode, setHoveredNode] = useState<string | null>(null);
 
   const handleDecline = useCallback(() => setQuality("low"), []);
   const handleIncline = useCallback(() => setQuality(tier), [tier]);
@@ -302,15 +368,33 @@ function SceneContent({ tier, scrollProgress }: Scene3DProps) {
   const particleCount = quality === "high" ? 200 : quality === "medium" ? 100 : 50;
   const nodeSize = quality === "low" ? 0.06 : 0.08;
 
+  // Disable auto-rotate when user is scrolling
+  const autoRotate = !(scrollProgress > 0 && scrollProgress < 0.95);
+
   return (
     <>
       <PerformanceMonitor onDecline={handleDecline} onIncline={handleIncline} />
       <CameraRig scrollProgress={scrollProgress} />
+      <OrbitControls
+        enableZoom={false}
+        enablePan={false}
+        maxPolarAngle={Math.PI / 2}
+        minPolarAngle={Math.PI / 4}
+        autoRotate={autoRotate}
+        autoRotateSpeed={0.3}
+      />
       <Lights />
       <Desk />
       <ConnectionLines />
       {SKILL_NODES.map((node, i) => (
-        <SkillNode key={i} {...node} size={nodeSize} />
+        <SkillNode
+          key={i}
+          {...node}
+          size={nodeSize}
+          hoveredNode={hoveredNode}
+          onHover={() => setHoveredNode(node.label)}
+          onUnhover={() => setHoveredNode(null)}
+        />
       ))}
       <Particles count={particleCount} />
       <ContactShadows
@@ -320,6 +404,7 @@ function SceneContent({ tier, scrollProgress }: Scene3DProps) {
         blur={2}
         far={3}
       />
+      {quality === "high" && <PostProcessing />}
     </>
   );
 }

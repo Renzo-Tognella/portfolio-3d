@@ -18,13 +18,13 @@ export function Contact() {
 
           <div className="mt-8 flex flex-wrap gap-4">
             <a
-              href="mailto:renzo@example.com"
+              href="mailto:renzo.tognella@gmail.com"
               className="rounded-full bg-accent px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent/90"
             >
               Email
             </a>
             <a
-              href="https://github.com/renzo"
+              href="https://github.com/Renzo-Tognella"
               target="_blank"
               rel="noopener noreferrer"
               className="rounded-full border border-border px-6 py-2.5 text-sm font-medium text-foreground transition-colors hover:border-accent hover:text-accent"
