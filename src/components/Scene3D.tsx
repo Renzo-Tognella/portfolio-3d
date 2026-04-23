@@ -268,9 +268,9 @@ function Monitor({ scrollProgress }: { scrollProgress: number }) {
       <mesh ref={screenRef} position={[0, 0, 0.035]}>
         <planeGeometry args={[1.65, 0.95]} />
         <meshStandardMaterial
-          emissive={isScreenOn ? "#6366f1" : "#1a1a3a"}
-          emissiveIntensity={isScreenOn ? 0 : 0.15}
-          color="#0a0a14"
+          emissive={isScreenOn ? "#6366f1" : "#1E3A5F"}
+          emissiveIntensity={isScreenOn ? 0 : 0.3}
+          color="#0d1520"
           roughness={0.1}
           metalness={0.1}
           toneMapped={false}
