@@ -870,7 +870,7 @@ function Floor() {
   return (
     <group position={[0, -0.01, 0]}>
       {/* Floor plane */}
-      <mesh receiveShadow>
+      <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[12, 12]} />
         <meshStandardMaterial color="#12121f" roughness={0.95} metalness={0} />
       </mesh>
