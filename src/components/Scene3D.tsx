@@ -7,11 +7,10 @@ import {
   Sparkles,
   PerformanceMonitor,
   OrbitControls,
-  RenderTexture,
 } from "@react-three/drei";
 import * as THREE from "three";
-import { MonitorContent } from "@/components/MonitorContent";
-import { PostitWall } from "@/components/PostitWall";
+import { useMonitorTexture } from "@/components/MonitorCanvas";
+import { usePostitTexture } from "@/components/PostitCanvas";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -314,6 +313,7 @@ function InteractiveDesk() {
 function Monitor({ scrollProgress }: { scrollProgress: number }) {
   const screenRef = useRef<THREE.Mesh>(null);
   const emissiveIntensity = useRef(0);
+  const monitorTexRef = useMonitorTexture(scrollProgress);
 
   // Turn-on curve: screen stays off until progress ~0.3, then glows to full by 0.6
   useFrame((state, delta) => {
@@ -355,19 +355,8 @@ function Monitor({ scrollProgress }: { scrollProgress: number }) {
           roughness={0.1}
           metalness={0.1}
           toneMapped={false}
-        >
-          {isScreenOn && (
-            <RenderTexture
-              attach="emissiveMap"
-              width={1920}
-              height={1080}
-              samples={8}
-              anisotropy={16}
-            >
-              <MonitorContent scrollProgress={scrollProgress} />
-            </RenderTexture>
-          )}
-        </meshStandardMaterial>
+          emissiveMap={monitorTexRef.current ?? undefined}
+        />
       </mesh>
       {/* Stand neck */}
       <mesh position={[0, -0.6, 0]} castShadow>
@@ -398,6 +387,8 @@ function Monitor({ scrollProgress }: { scrollProgress: number }) {
 // ---------------------------------------------------------------------------
 function SecondMonitor({ scrollProgress }: { scrollProgress: number }) {
   const secondScreenOn = scrollProgress > 0.2;
+  const postitTexRef = usePostitTexture();
+
   return (
     <group position={[-1.1, 1.35, -0.15]} rotation={[0, 0.35, 0]}>
       <mesh castShadow>
@@ -413,19 +404,8 @@ function SecondMonitor({ scrollProgress }: { scrollProgress: number }) {
           roughness={0.1}
           metalness={0.1}
           toneMapped={false}
-        >
-          {secondScreenOn && (
-            <RenderTexture
-              attach="emissiveMap"
-              width={1024}
-              height={640}
-              samples={8}
-              anisotropy={16}
-            >
-              <PostitWall />
-            </RenderTexture>
-          )}
-        </meshStandardMaterial>
+          emissiveMap={postitTexRef.current ?? undefined}
+        />
       </mesh>
       <mesh position={[0, -0.45, 0]}>
         <cylinderGeometry args={[0.03, 0.05, 0.15, 8]} />
