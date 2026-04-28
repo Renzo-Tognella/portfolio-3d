@@ -341,23 +341,9 @@ function SkillCard({
   );
 }
 
-/* ────────────────────────────────────────────
-   Decorative background orbs
-   ──────────────────────────────────────────── */
-
-function BackgroundOrbs() {
-  return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden">
-      <div className="absolute -top-[30%] left-[10%] h-[600px] w-[600px] rounded-full bg-indigo-500/[0.03] blur-[120px]" />
-      <div className="absolute top-[20%] -right-[10%] h-[500px] w-[500px] rounded-full bg-cyan-500/[0.03] blur-[120px]" />
-      <div className="absolute -bottom-[20%] left-[40%] h-[500px] w-[500px] rounded-full bg-rose-500/[0.03] blur-[120px]" />
-    </div>
-  );
-}
-
-/* ────────────────────────────────────────────
+/* ───────────────────────────────────────────────────────────
    Main Skills component
-   ──────────────────────────────────────────── */
+   ─────────────────────────────────────────────────────────── */
 
 export function Skills() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -392,10 +378,8 @@ export function Skills() {
     <section
       ref={sectionRef}
       id="skills"
-      className="relative w-full overflow-hidden py-28 md:py-36"
+      className="relative w-full py-28 md:py-36"
     >
-      <BackgroundOrbs />
-
       <div className="relative z-10 mx-auto max-w-7xl px-6 md:px-10">
         {/* Heading */}
         <div className="mb-20 text-center">

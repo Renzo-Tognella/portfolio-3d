@@ -298,19 +298,6 @@ function TimelineCard({ entry }: { entry: (typeof TIMELINE)[number] }) {
 }
 
 // ---------------------------------------------------------------------------
-// Reusable: Background orbs
-// ---------------------------------------------------------------------------
-function SectionOrbs({ colors = ["#6366f1", "#06b6d4", "#f43f5e"] }: { colors?: string[] }) {
-  return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden">
-      <div className="absolute -top-[20%] left-[5%] h-[500px] w-[500px] rounded-full blur-[120px]" style={{ background: colors[0], opacity: 0.03 }} />
-      <div className="absolute top-[30%] -right-[5%] h-[400px] w-[400px] rounded-full blur-[100px]" style={{ background: colors[1], opacity: 0.03 }} />
-      <div className="absolute -bottom-[10%] left-[40%] h-[400px] w-[400px] rounded-full blur-[100px]" style={{ background: colors[2], opacity: 0.03 }} />
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
 // Reusable: Premium section heading
 // ---------------------------------------------------------------------------
 function SectionHeading({
@@ -356,9 +343,7 @@ function SectionHeading({
 // ---------------------------------------------------------------------------
 export function About() {
   return (
-    <section id="about" className="relative w-full overflow-hidden py-28 md:py-36">
-      <SectionOrbs colors={["#6366f1", "#f59e0b", "#06b6d4"]} />
-
+    <section id="about" className="relative w-full py-28 md:py-36">
       <div className="relative z-10 mx-auto max-w-7xl px-6 md:px-10">
         <SectionHeading
           badge="Perfil"
