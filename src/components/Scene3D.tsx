@@ -141,9 +141,137 @@ function DiveCamera({ scrollProgress }: { scrollProgress: number }) {
 }
 
 // ---------------------------------------------------------------------------
-// Wooden Desk
+// Project data for desk drawers
 // ---------------------------------------------------------------------------
-function Desk() {
+const DRAWER_PROJECTS = [
+  { id: 0, title: "Tradener", tech: "Rails / PG / Redis / Docker", color: "#818cf8" },
+  { id: 1, title: "Modulus", tech: "Rails / Python / LLMs / PG", color: "#34d399" },
+  { id: 2, title: "IEEE Research", tech: "C++ / Python / CV / NLP", color: "#fbbf24" },
+];
+
+// ---------------------------------------------------------------------------
+// Drawer label rendered in RenderTexture
+// ---------------------------------------------------------------------------
+function DrawerLabel({ project }: { project: { title: string; tech: string; color: string } }) {
+  return (
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "#0f0f1a",
+        fontFamily: "monospace",
+        padding: "12px",
+        boxSizing: "border-box",
+      }}
+    >
+      <span
+        style={{
+          color: project.color,
+          fontSize: "22px",
+          fontWeight: "bold",
+          marginBottom: "6px",
+        }}
+      >
+        {project.title}
+      </span>
+      <span
+        style={{
+          color: "#94a3b8",
+          fontSize: "10px",
+          textAlign: "center",
+          lineHeight: "1.4",
+        }}
+      >
+        {project.tech}
+      </span>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Individual drawer sub-component — slides open on click
+// ---------------------------------------------------------------------------
+function Drawer({
+  project,
+  index,
+}: {
+  project: { title: string; tech: string; color: string };
+  index: number;
+}) {
+  const [open, setOpen] = useState(false);
+  const groupRef = useRef<THREE.Group>(null);
+
+  const closedZ = -0.82;
+  const openZ = -0.22;
+  const xPos = (index - 1) * 0.85;
+
+  useFrame((_, delta) => {
+    if (!groupRef.current) return;
+    const target = open ? openZ : closedZ;
+    groupRef.current.position.z = THREE.MathUtils.damp(
+      groupRef.current.position.z,
+      target,
+      6,
+      delta
+    );
+  });
+
+  return (
+    <group position={[xPos, 0.35, 0]}>
+      {/* Cavity — visible when drawer slides out */}
+      <mesh position={[0, 0, closedZ]}>
+        <boxGeometry args={[0.7, 0.32, 0.46]} />
+        <meshStandardMaterial color="#0a0a0a" roughness={0.9} />
+      </mesh>
+
+      {/* Drawer body + face */}
+      <group ref={groupRef} position={[0, 0, closedZ]}>
+        {/* Drawer box */}
+        <mesh
+          castShadow
+          onClick={(e) => {
+            e.stopPropagation();
+            setOpen((o) => !o);
+          }}
+          onPointerOver={() => {
+            document.body.style.cursor = "pointer";
+          }}
+          onPointerOut={() => {
+            document.body.style.cursor = "auto";
+          }}
+        >
+          <boxGeometry args={[0.7, 0.3, 0.45]} />
+          {MAT.wood("#7B5F4A")}
+        </mesh>
+
+        {/* Front face — RenderTexture with project info */}
+        <mesh position={[0, 0, 0.23]}>
+          <planeGeometry args={[0.6, 0.22]} />
+          <meshStandardMaterial roughness={0.1} metalness={0}>
+            <RenderTexture width={512} height={256} samples={4}>
+              <DrawerLabel project={project} />
+            </RenderTexture>
+          </meshStandardMaterial>
+        </mesh>
+
+        {/* Handle */}
+        <mesh position={[0, 0.08, 0.26]} castShadow>
+          <boxGeometry args={[0.3, 0.025, 0.025]} />
+          {MAT.metal("#888")}
+        </mesh>
+      </group>
+    </group>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Interactive Desk with clickable drawers
+// ---------------------------------------------------------------------------
+function InteractiveDesk() {
   return (
     <group>
       {/* Tabletop */}
@@ -151,6 +279,7 @@ function Desk() {
         <boxGeometry args={[3.2, 0.08, 1.5]} />
         {MAT.wood("#6B4F3A")}
       </mesh>
+
       {/* Desk legs — tapered */}
       {[
         [-1.45, 0.35, -0.6],
@@ -163,11 +292,17 @@ function Desk() {
           {MAT.wood("#5C4033")}
         </mesh>
       ))}
-      {/* Crossbar back */}
-      <mesh position={[0, 0.35, -0.6]} castShadow>
-        <boxGeometry args={[2.9, 0.06, 0.06]} />
-        {MAT.wood("#5C4033")}
+
+      {/* Front panel backboard — thin panel behind drawers */}
+      <mesh position={[0, 0.35, -0.84]} castShadow>
+        <boxGeometry args={[2.8, 0.6, 0.03]} />
+        {MAT.wood("#4A3528")}
       </mesh>
+
+      {/* Three project drawers */}
+      {DRAWER_PROJECTS.map((proj, i) => (
+        <Drawer key={proj.id} project={proj} index={i} />
+      ))}
     </group>
   );
 }
@@ -307,6 +442,41 @@ function SecondMonitor({ scrollProgress }: { scrollProgress: number }) {
 // ---------------------------------------------------------------------------
 // Keyboard with procedural keys
 // ---------------------------------------------------------------------------
+function KeyMesh({
+  position,
+  size,
+}: {
+  position: [number, number, number];
+  size: [number, number, number];
+}) {
+  const ref = useRef<THREE.Mesh>(null);
+  const [hovered, setHovered] = useState(false);
+  const glowRef = useRef(0);
+
+  useFrame((_, delta) => {
+    if (!ref.current) return;
+    const target = hovered ? 1 : 0;
+    glowRef.current = THREE.MathUtils.lerp(glowRef.current, target, delta * 12);
+    const mat = ref.current.material as THREE.MeshStandardMaterial;
+    mat.emissiveIntensity = glowRef.current * 0.8;
+    mat.emissive.setHex(hovered ? 0x6366f1 : 0x000000);
+    // Lift key slightly on hover
+    ref.current.position.y = 0.03 + glowRef.current * 0.005;
+  });
+
+  return (
+    <mesh
+      ref={ref}
+      position={position}
+      onPointerOver={(e) => { e.stopPropagation(); setHovered(true); document.body.style.cursor = "pointer"; }}
+      onPointerOut={() => { setHovered(false); document.body.style.cursor = "auto"; }}
+    >
+      <boxGeometry args={size} />
+      <meshStandardMaterial color="#3A3A3A" roughness={0.5} metalness={0.15} />
+    </mesh>
+  );
+}
+
 function Keyboard() {
   const rows = [
     { y: 0.0, keys: 14, w: 0.1, gap: 0.015 },
@@ -323,20 +493,18 @@ function Keyboard() {
         <boxGeometry args={[1.6, 0.04, 0.7]} />
         {MAT.plastic("#2D2D2D")}
       </mesh>
-      {/* Keys */}
+      {/* Keys — interactive */}
       {rows.map((row, ri) =>
         Array.from({ length: row.keys }, (_, ki) => (
-          <mesh
+          <KeyMesh
             key={`${ri}-${ki}`}
             position={[
               -0.7 + ki * (row.w + row.gap) + (ri === 4 ? 0.3 : ri === 3 ? 0.15 : 0),
               0.03,
               -0.28 + row.y,
             ]}
-          >
-            <boxGeometry args={[row.w - 0.02, 0.025, 0.09]} />
-            <meshStandardMaterial color="#3A3A3A" roughness={0.5} metalness={0.15} />
-          </mesh>
+            size={[row.w - 0.02, 0.025, 0.09]}
+          />
         ))
       )}
     </group>
@@ -476,19 +644,214 @@ function DeskLamp() {
 }
 
 // ---------------------------------------------------------------------------
-// Books Stack
+// Interactive Books Stack
 // ---------------------------------------------------------------------------
-function Books() {
+
+const SKILL_CATEGORIES = [
+  {
+    name: "Backend",
+    color: "#6366f1", // indigo
+    skills: ["Ruby on Rails", "Node.js", "Python", "GraphQL", "REST APIs"],
+  },
+  {
+    name: "Bancos de Dados",
+    color: "#06b6d4", // cyan
+    skills: ["PostgreSQL", "MongoDB", "Redis", "MySQL"],
+  },
+  {
+    name: "Infraestrutura",
+    color: "#f59e0b", // amber
+    skills: ["Docker", "Kubernetes", "AWS", "CI/CD", "Linux"],
+  },
+  {
+    name: "Qualidade & IA",
+    color: "#f43f5e", // rose
+    skills: ["RSpec", "Jest", "Copilot", "ChatGPT", "Code Review"],
+  },
+];
+
+interface BookProps {
+  color: string;
+  width: number;
+  index: number;
+  category: (typeof SKILL_CATEGORIES)[0];
+}
+
+function Book({ color, width, index, category }: BookProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+
+  const groupRef = useRef<THREE.Group>(null);
+  const coverPivotRef = useRef<THREE.Group>(null);
+
+  const targetOpen = useRef(0);
+  const targetLift = useRef(0);
+  const currentOpen = useRef(0);
+  const currentLift = useRef(0);
+
+  useFrame((_, delta) => {
+    currentOpen.current = THREE.MathUtils.damp(
+      currentOpen.current,
+      targetOpen.current,
+      8,
+      delta
+    );
+    currentLift.current = THREE.MathUtils.damp(
+      currentLift.current,
+      targetLift.current,
+      6,
+      delta
+    );
+
+    if (coverPivotRef.current) {
+      coverPivotRef.current.rotation.z = currentOpen.current;
+    }
+    if (groupRef.current) {
+      groupRef.current.position.y =
+        0.04 + index * 0.05 + currentLift.current;
+    }
+  });
+
+  useEffect(() => {
+    targetOpen.current = isOpen ? -Math.PI * 0.78 : 0;
+  }, [isOpen]);
+
+  useEffect(() => {
+    targetLift.current = isHovered ? 0.03 : 0;
+  }, [isHovered]);
+
+  // Canvas texture for the inner page
+  const pageTexture = useMemo(() => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 512;
+    canvas.height = 256;
+    const ctx = canvas.getContext("2d")!;
+
+    // Colored background
+    ctx.fillStyle = category.color;
+    ctx.fillRect(0, 0, 512, 256);
+
+    // Subtle border
+    ctx.strokeStyle = "rgba(0,0,0,0.25)";
+    ctx.lineWidth = 6;
+    ctx.strokeRect(3, 3, 506, 250);
+
+    // Category name
+    ctx.fillStyle = "white";
+    ctx.font = "bold 32px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.shadowColor = "rgba(0,0,0,0.3)";
+    ctx.shadowBlur = 4;
+    ctx.fillText(category.name, 256, 48);
+    ctx.shadowBlur = 0;
+
+    // Divider line
+    ctx.strokeStyle = "rgba(255,255,255,0.35)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(80, 72);
+    ctx.lineTo(432, 72);
+    ctx.stroke();
+
+    // Skills
+    ctx.font = "17px sans-serif";
+    ctx.fillStyle = "rgba(255,255,255,0.9)";
+    category.skills.forEach((skill, i) => {
+      ctx.fillText(skill, 256, 105 + i * 28);
+    });
+
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.minFilter = THREE.LinearFilter;
+    tex.magFilter = THREE.LinearFilter;
+    return tex;
+  }, [category]);
+
+  const pagesWidth = width - 0.015;
+  const pagesDepth = 0.33;
+  const pagesHeight = 0.038;
+
+  return (
+    <group
+      ref={groupRef}
+      position={[index * 0.02, 0.04 + index * 0.05, 0]}
+    >
+      {/* Pages block — revealed when cover opens */}
+      <mesh castShadow>
+        <boxGeometry args={[pagesWidth, pagesHeight, pagesDepth]} />
+        <meshStandardMaterial color="#F5F0E8" roughness={0.8} />
+      </mesh>
+
+      {/* Top page with skill text (always present, covered by the cover when closed) */}
+      <mesh
+        position={[0, pagesHeight / 2 + 0.001, 0]}
+        rotation={[-Math.PI / 2, 0, 0]}
+      >
+        <planeGeometry args={[pagesWidth - 0.02, pagesDepth - 0.03]} />
+        <meshStandardMaterial
+          map={pageTexture}
+          roughness={0.5}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+
+      {/* Cover — pivoted at left spine edge, rotates around Z */}
+      <group ref={coverPivotRef} position={[-width / 2, 0, 0]}>
+        {/* Cover box offset so its left edge sits at pivot origin */}
+        <mesh position={[width / 2, 0, 0]} castShadow>
+          <boxGeometry args={[width, 0.045, 0.35]} />
+          <meshStandardMaterial color={color} roughness={0.7} />
+        </mesh>
+
+        {/* Inner face of cover (visible when swung open) */}
+        <mesh
+          position={[width / 2, -0.023, 0]}
+          rotation={[-Math.PI / 2, 0, 0]}
+        >
+          <planeGeometry args={[width - 0.02, 0.33]} />
+          <meshStandardMaterial
+            color={category.color}
+            roughness={0.4}
+            side={THREE.DoubleSide}
+          />
+        </mesh>
+      </group>
+
+      {/* Invisible hit-target for pointer events */}
+      <mesh
+        position={[0, 0.025, 0]}
+        onPointerOver={(e) => {
+          e.stopPropagation();
+          setIsHovered(true);
+        }}
+        onPointerOut={() => setIsHovered(false)}
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsOpen((prev) => !prev);
+        }}
+      >
+        <boxGeometry args={[width + 0.04, 0.06, 0.37]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+      </mesh>
+    </group>
+  );
+}
+
+function InteractiveBooks() {
   const bookColors = ["#8B4513", "#1E3A5F", "#5B2C6F", "#7B241C"];
   const bookWidths = [0.25, 0.2, 0.22, 0.18];
 
   return (
     <group position={[1.1, 0.79, -0.45]}>
       {bookColors.map((color, i) => (
-        <mesh key={i} position={[i * 0.02, 0.04 + i * 0.05, 0]} castShadow>
-          <boxGeometry args={[bookWidths[i], 0.045, 0.35]} />
-          <meshStandardMaterial color={color} roughness={0.7} />
-        </mesh>
+        <Book
+          key={i}
+          color={color}
+          width={bookWidths[i]}
+          index={i}
+          category={SKILL_CATEGORIES[i]}
+        />
       ))}
     </group>
   );
@@ -974,14 +1337,14 @@ function SceneContent({ tier, scrollProgress }: Scene3DProps) {
       <Chair />
       <Rug />
       <RubyFrame />
-      <Desk />
+      <InteractiveDesk />
       <Monitor scrollProgress={scrollProgress} />
       <SecondMonitor scrollProgress={scrollProgress} />
       <Keyboard />
       <Mouse />
       <CoffeeMachine />
       <DeskLamp />
-      <Books />
+      <InteractiveBooks />
       <CoffeeMug />
       <Plant />
       <Headphones />
