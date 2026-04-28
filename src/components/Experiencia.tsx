@@ -474,7 +474,7 @@ function ProjectSection({ project, index }: { project: Project; index: number })
    Section
    ──────────────────────────────────────────── */
 
-export function Projects() {
+export function Experiencia() {
   const sectionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -506,14 +506,14 @@ export function Projects() {
   }, []);
 
   return (
-    <section id="projects" ref={sectionRef} className="mx-auto max-w-6xl px-6 py-24">
-      {/* ── Section heading ── */}
+    <section id="experience" ref={sectionRef} className="mx-auto max-w-6xl px-6 py-24">
+      {/* —— Section heading —— */}
       <div className="mb-8">
         <h2
           data-reveal-heading
           className="project-card font-mono text-sm font-semibold uppercase tracking-[0.2em] text-accent"
         >
-          Projetos
+          Experiência
         </h2>
         <div
           data-reveal-heading
@@ -530,7 +530,7 @@ export function Projects() {
           className="project-card mt-4 max-w-lg text-sm leading-relaxed text-muted"
           style={{ "--stagger": "100ms" } as React.CSSProperties}
         >
-          Experiência em sistemas de missão crítica, integrações corporativas e pesquisa aplicada.
+          Trajetória profissional em sistemas de missão crítica, integrações corporativas e pesquisa aplicada.
         </p>
       </div>
 

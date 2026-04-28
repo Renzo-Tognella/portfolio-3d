@@ -9,12 +9,12 @@ import {
 } from "react";
 
 /* ────────────────────────────────────────────
-   Data — Real skills from resume
+   Data
    ──────────────────────────────────────────── */
 
 interface Skill {
   name: string;
-  level: number; // 0-100
+  level: number;
 }
 
 interface Category {
@@ -69,144 +69,288 @@ const SKILL_CATEGORIES: Category[] = [
   },
 ];
 
-/* ── Tailwind colour maps per accent ── */
-const ACCENT_COLORS = {
+const ACCENT_META: Record<
+  Category["accent"],
+  {
+    text: string;
+    textStrong: string;
+    bgSoft: string;
+    bgGlow: string;
+    borderGlow: string;
+    barGradient: string;
+    barGlow: string;
+    iconBg: string;
+    stroke: string;
+  }
+> = {
   indigo: {
-    strip: "bg-indigo-500",
-    barBg: "bg-indigo-500/15",
-    barFill: "bg-indigo-500",
-    text: "text-indigo-400",
-    stroke: "#6366f1",
-    glow: "shadow-indigo-500/20",
+    text: "text-indigo-300",
+    textStrong: "text-indigo-400",
+    bgSoft: "bg-indigo-500/[0.06]",
+    bgGlow: "rgba(99,102,241,0.12)",
+    borderGlow: "rgba(99,102,241,0.25)",
+    barGradient: "linear-gradient(90deg, #6366f1 0%, #818cf8 60%, #a5b4fc 100%)",
+    barGlow: "0 0 12px rgba(99,102,241,0.45), 0 0 4px rgba(99,102,241,0.3)",
+    iconBg: "bg-indigo-500/10",
+    stroke: "#818cf8",
   },
   violet: {
-    strip: "bg-violet-500",
-    barBg: "bg-violet-500/15",
-    barFill: "bg-violet-500",
-    text: "text-violet-400",
-    stroke: "#8b5cf6",
-    glow: "shadow-violet-500/20",
+    text: "text-violet-300",
+    textStrong: "text-violet-400",
+    bgSoft: "bg-violet-500/[0.06]",
+    bgGlow: "rgba(139,92,246,0.12)",
+    borderGlow: "rgba(139,92,246,0.25)",
+    barGradient: "linear-gradient(90deg, #8b5cf6 0%, #a78bfa 60%, #c4b5fd 100%)",
+    barGlow: "0 0 12px rgba(139,92,246,0.45), 0 0 4px rgba(139,92,246,0.3)",
+    iconBg: "bg-violet-500/10",
+    stroke: "#a78bfa",
   },
   cyan: {
-    strip: "bg-cyan-500",
-    barBg: "bg-cyan-500/15",
-    barFill: "bg-cyan-500",
-    text: "text-cyan-400",
-    stroke: "#06b6d4",
-    glow: "shadow-cyan-500/20",
+    text: "text-cyan-300",
+    textStrong: "text-cyan-400",
+    bgSoft: "bg-cyan-500/[0.06]",
+    bgGlow: "rgba(6,182,212,0.12)",
+    borderGlow: "rgba(6,182,212,0.25)",
+    barGradient: "linear-gradient(90deg, #06b6d4 0%, #22d3ee 60%, #67e8f9 100%)",
+    barGlow: "0 0 12px rgba(6,182,212,0.45), 0 0 4px rgba(6,182,212,0.3)",
+    iconBg: "bg-cyan-500/10",
+    stroke: "#22d3ee",
   },
   amber: {
-    strip: "bg-amber-500",
-    barBg: "bg-amber-500/15",
-    barFill: "bg-amber-500",
-    text: "text-amber-400",
-    stroke: "#f59e0b",
-    glow: "shadow-amber-500/20",
+    text: "text-amber-300",
+    textStrong: "text-amber-400",
+    bgSoft: "bg-amber-500/[0.06]",
+    bgGlow: "rgba(245,158,11,0.12)",
+    borderGlow: "rgba(245,158,11,0.25)",
+    barGradient: "linear-gradient(90deg, #f59e0b 0%, #fbbf24 60%, #fcd34d 100%)",
+    barGlow: "0 0 12px rgba(245,158,11,0.45), 0 0 4px rgba(245,158,11,0.3)",
+    iconBg: "bg-amber-500/10",
+    stroke: "#fbbf24",
   },
   rose: {
-    strip: "bg-rose-500",
-    barBg: "bg-rose-500/15",
-    barFill: "bg-rose-500",
-    text: "text-rose-400",
-    stroke: "#f43f5e",
-    glow: "shadow-rose-500/20",
+    text: "text-rose-300",
+    textStrong: "text-rose-400",
+    bgSoft: "bg-rose-500/[0.06]",
+    bgGlow: "rgba(244,63,94,0.12)",
+    borderGlow: "rgba(244,63,94,0.25)",
+    barGradient: "linear-gradient(90deg, #f43f5e 0%, #fb7185 60%, #fda4af 100%)",
+    barGlow: "0 0 12px rgba(244,63,94,0.45), 0 0 4px rgba(244,63,94,0.3)",
+    iconBg: "bg-rose-500/10",
+    stroke: "#fb7185",
   },
-} as const;
+};
 
 /* ────────────────────────────────────────────
-   SVG Icons — stroke-dashoffset draw-on
+   Icons
    ──────────────────────────────────────────── */
 
 function BackendIcon({ stroke }: { stroke: string }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className="skill-svg h-7 w-7" style={{ color: stroke }}>
-      <rect className="skill-svg-path" x="2" y="2" width="20" height="8" rx="2" />
-      <rect className="skill-svg-path" x="2" y="14" width="20" height="8" rx="2" />
-      <circle cx="6" cy="6" r="1" fill="currentColor" />
-      <circle cx="6" cy="18" r="1" fill="currentColor" />
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6" style={{ color: stroke }}>
+      <rect x="2" y="3" width="20" height="8" rx="2" />
+      <rect x="2" y="13" width="20" height="8" rx="2" />
+      <circle cx="6" cy="7" r="1" fill="currentColor" />
+      <circle cx="6" cy="17" r="1" fill="currentColor" />
     </svg>
   );
 }
 
 function DatabaseIcon({ stroke }: { stroke: string }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className="skill-svg h-7 w-7" style={{ color: stroke }}>
-      <ellipse className="skill-svg-path" cx="12" cy="5" rx="9" ry="3" />
-      <path className="skill-svg-path" d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
-      <path className="skill-svg-path" d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
-    </svg>
-  );
-}
-
-function InfraIcon({ stroke }: { stroke: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className="skill-svg h-7 w-7" style={{ color: stroke }}>
-      <path className="skill-svg-path" d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" />
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6" style={{ color: stroke }}>
+      <ellipse cx="12" cy="5" rx="9" ry="3" />
+      <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+      <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
     </svg>
   );
 }
 
 function QualityIcon({ stroke }: { stroke: string }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className="skill-svg h-7 w-7" style={{ color: stroke }}>
-      <path className="skill-svg-path" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-      <path className="skill-svg-path" d="m9 12 2 2 4-4" />
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6" style={{ color: stroke }}>
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      <path d="m9 12 2 2 4-4" />
     </svg>
   );
 }
 
 function FrontendIcon({ stroke }: { stroke: string }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className="skill-svg h-7 w-7" style={{ color: stroke }}>
-      <rect className="skill-svg-path" x="2" y="3" width="20" height="14" rx="2" />
-      <path className="skill-svg-path" d="M8 21h8" />
-      <path className="skill-svg-path" d="M12 17v4" />
-      <path className="skill-svg-path" d="m7 8 3 3-3 3" />
-      <path className="skill-svg-path" d="m13 8 3 3-3 3" />
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6" style={{ color: stroke }}>
+      <rect x="2" y="3" width="20" height="14" rx="2" />
+      <path d="M8 21h8" />
+      <path d="M12 17v4" />
+      <path d="m7 8 3 3-3 3" />
+      <path d="m13 8 3 3-3 3" />
     </svg>
   );
 }
 
 const CATEGORY_ICONS: Record<string, (props: { stroke: string }) => ReactElement> = {
-  "Backend": BackendIcon,
-  "Frontend": FrontendIcon,
+  Backend: BackendIcon,
+  Frontend: FrontendIcon,
   "Dados & Infra": DatabaseIcon,
   "Qualidade & IA": QualityIcon,
 };
 
 /* ────────────────────────────────────────────
-   SkillBar sub-component
+   SkillBar — premium gradient glow bar
    ──────────────────────────────────────────── */
 
 function SkillBar({
   skill,
-  colors,
+  meta,
   index,
   visible,
 }: {
   skill: Skill;
-  colors: (typeof ACCENT_COLORS)[keyof typeof ACCENT_COLORS];
+  meta: (typeof ACCENT_META)[keyof typeof ACCENT_META];
   index: number;
   visible: boolean;
 }) {
+  const [hovered, setHovered] = useState(false);
+
   return (
     <div
-      className="skill-bar-row"
-      style={{ "--stagger": `${index * 80}ms` } as React.CSSProperties}
+      className="skill-bar-row group/skill"
+      style={{ "--stagger": `${index * 100}ms` } as React.CSSProperties}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
-      <div className="mb-1 flex items-center justify-between">
-        <span className="font-mono text-xs text-foreground/80">{skill.name}</span>
-        <span className={`font-mono text-[10px] ${colors.text}`}>{skill.level}%</span>
+      <div className="mb-2 flex items-center justify-between">
+        <span className="text-sm font-medium text-foreground/80 transition-colors group-hover/skill:text-foreground">
+          {skill.name}
+        </span>
+        <span
+          className={`font-mono text-xs font-semibold tabular-nums transition-colors ${meta.textStrong}`}
+          style={{ textShadow: hovered ? `0 0 8px ${meta.bgGlow}` : "none" }}
+        >
+          {skill.level}%
+        </span>
       </div>
-      <div className={`h-2 w-full overflow-hidden rounded-full ${colors.barBg}`}>
+
+      {/* Track */}
+      <div className="skill-bar-track relative h-2.5 w-full overflow-hidden rounded-full bg-white/[0.04] ring-1 ring-white/[0.06]">
+        {/* Fill */}
         <div
-          className={`skill-bar-fill h-full rounded-full ${colors.barFill} transition-none`}
+          className="skill-bar-fill absolute inset-y-0 left-0 rounded-full"
           style={{
             width: visible ? `${skill.level}%` : "0%",
-            transitionDelay: visible ? `${index * 80}ms` : "0ms",
+            background: meta.barGradient,
+            boxShadow: visible ? meta.barGlow : "none",
+            transitionDelay: visible ? `${index * 100 + 300}ms` : "0ms",
+          }}
+        />
+        {/* Shimmer shine */}
+        <div
+          className="skill-bar-shimmer absolute inset-y-0 w-1/3 rounded-full opacity-0"
+          style={{
+            background:
+              "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.15) 50%, transparent 100%)",
+            left: visible ? `${skill.level - 35}%` : "-35%",
+            transition: visible
+              ? `left 1200ms cubic-bezier(0.215, 0.61, 0.355, 1) ${index * 100 + 500}ms, opacity 400ms ease ${index * 100 + 500}ms`
+              : "none",
+            opacity: visible ? 1 : 0,
           }}
         />
       </div>
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────
+   SkillCard — large glassmorphic card
+   ──────────────────────────────────────────── */
+
+function SkillCard({
+  cat,
+  index,
+  visible,
+  setRef,
+}: {
+  cat: Category;
+  index: number;
+  visible: boolean;
+  setRef: (el: HTMLDivElement | null) => void;
+}) {
+  const meta = ACCENT_META[cat.accent];
+  const Icon = CATEGORY_ICONS[cat.name];
+
+  return (
+    <div
+      ref={setRef}
+      className={`skill-card-premium group relative flex flex-col overflow-hidden rounded-3xl border backdrop-blur-2xl transition-all duration-700 ${
+        visible ? "is-visible" : ""
+      }`}
+      style={{
+        "--stagger": `${index * 180}ms`,
+        background:
+          "linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)",
+        borderColor: meta.borderGlow,
+        boxShadow: `0 0 0 1px rgba(255,255,255,0.03), 0 24px 48px -16px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05)`,
+      } as React.CSSProperties}
+    >
+      {/* Top accent glow line */}
+      <div
+        className="absolute inset-x-0 top-0 h-px"
+        style={{
+          background: `linear-gradient(90deg, transparent 0%, ${meta.stroke} 50%, transparent 100%)`,
+          opacity: 0.6,
+        }}
+      />
+
+      {/* Background radial glow */}
+      <div
+        className="pointer-events-none absolute -top-20 -right-20 h-40 w-40 rounded-full opacity-20 blur-3xl transition-opacity duration-700 group-hover:opacity-40"
+        style={{ background: meta.stroke }}
+      />
+
+      <div className="relative z-10 flex flex-1 flex-col p-8 md:p-10">
+        {/* Header */}
+        <div className="skill-card-header mb-8 flex items-center gap-4">
+          <div
+            className={`flex h-12 w-12 items-center justify-center rounded-2xl ${meta.iconBg} ring-1 ring-white/10 transition-all duration-500 group-hover:scale-110 group-hover:ring-white/20`}
+          >
+            {Icon && <Icon stroke={meta.stroke} />}
+          </div>
+          <div>
+            <h3 className="text-base font-bold uppercase tracking-widest text-foreground">
+              {cat.name}
+            </h3>
+            <p className={`mt-0.5 text-xs font-medium ${meta.text}`}>
+              {cat.skills.length} tecnologias
+            </p>
+          </div>
+        </div>
+
+        {/* Skills */}
+        <div className="flex flex-1 flex-col justify-center gap-4">
+          {cat.skills.map((skill, skillIdx) => (
+            <SkillBar
+              key={skill.name}
+              skill={skill}
+              meta={meta}
+              index={skillIdx}
+              visible={visible}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────
+   Decorative background orbs
+   ──────────────────────────────────────────── */
+
+function BackgroundOrbs() {
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+      <div className="absolute -top-[30%] left-[10%] h-[600px] w-[600px] rounded-full bg-indigo-500/[0.03] blur-[120px]" />
+      <div className="absolute top-[20%] -right-[10%] h-[500px] w-[500px] rounded-full bg-cyan-500/[0.03] blur-[120px]" />
+      <div className="absolute -bottom-[20%] left-[40%] h-[500px] w-[500px] rounded-full bg-rose-500/[0.03] blur-[120px]" />
     </div>
   );
 }
@@ -220,11 +364,10 @@ export function Skills() {
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [visible, setVisible] = useState(false);
 
-  /* ── Intersection Observer ── */
+  /* Intersection Observer */
   useEffect(() => {
     const el = sectionRef.current;
     if (!el) return;
-
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -232,55 +375,10 @@ export function Skills() {
           observer.disconnect();
         }
       },
-      { threshold: 0.15 },
+      { threshold: 0.1 },
     );
-
     observer.observe(el);
     return () => observer.disconnect();
-  }, []);
-
-  /* ── SVG stroke-dasharray draw-on ── */
-  useEffect(() => {
-    if (!visible) return;
-
-    cardRefs.current.forEach((card) => {
-      if (!card) return;
-      card.querySelectorAll<SVGPathElement>(".skill-svg-path").forEach((path) => {
-        const length = path.getTotalLength();
-        path.style.strokeDasharray = `${length}`;
-        path.style.strokeDashoffset = `${length}`;
-      });
-    });
-
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        cardRefs.current.forEach((card) => {
-          if (!card) return;
-          card.querySelectorAll<SVGPathElement>(".skill-svg-path").forEach((path) => {
-            path.style.transition = "stroke-dashoffset 800ms cubic-bezier(0.215, 0.61, 0.355, 1)";
-            path.style.strokeDashoffset = "0";
-          });
-        });
-      });
-    });
-  }, [visible]);
-
-  /* ── Mouse parallax ── */
-  const handleMouseMove = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
-      const card = e.currentTarget;
-      const rect = card.getBoundingClientRect();
-      const cx = rect.left + rect.width / 2;
-      const cy = rect.top + rect.height / 2;
-      const dx = ((e.clientX - cx) / (rect.width / 2)) * 4;
-      const dy = ((e.clientY - cy) / (rect.height / 2)) * 4;
-      card.style.transform = `translate(${dx}px, ${dy}px)`;
-    },
-    [],
-  );
-
-  const handleMouseLeave = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    e.currentTarget.style.transform = "translate(0, 0)";
   }, []);
 
   const setCardRef = useCallback(
@@ -291,69 +389,59 @@ export function Skills() {
   );
 
   return (
-    <section ref={sectionRef} id="skills" className="mx-auto max-w-6xl px-6 py-24">
-      {/* —— heading —— */}
-      <div className="mb-14">
-        <h2 className="mb-3 font-mono text-sm font-semibold uppercase tracking-widest text-accent">
-          Skills
-        </h2>
-        <div className="relative mb-3 h-[3px] w-48 overflow-hidden rounded-full bg-surface">
-          <div className="animate-shimmer absolute inset-y-0 w-1/3 rounded-full bg-gradient-to-r from-accent to-accent-secondary" />
-        </div>
-        <p className="max-w-lg text-sm text-muted">
-          Stack técnico e competências desenvolvidas ao longo de 6+ anos construindo sistemas de alta performance.
-        </p>
-      </div>
+    <section
+      ref={sectionRef}
+      id="skills"
+      className="relative w-full overflow-hidden py-28 md:py-36"
+    >
+      <BackgroundOrbs />
 
-      {/* —— 2×2 constellation grid —— */}
-      <div className="grid gap-5 sm:grid-cols-2">
-        {SKILL_CATEGORIES.map((cat, catIdx) => {
-          const colors = ACCENT_COLORS[cat.accent];
-          const Icon = CATEGORY_ICONS[cat.name];
+      <div className="relative z-10 mx-auto max-w-7xl px-6 md:px-10">
+        {/* Heading */}
+        <div className="mb-20 text-center">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/5 bg-white/[0.02] px-4 py-1.5 backdrop-blur-sm">
+            <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
+            <span className="font-mono text-xs uppercase tracking-widest text-muted">
+              Competências
+            </span>
+          </div>
 
-          return (
-            <div
-              key={cat.name}
-              ref={setCardRef(catIdx)}
-              className={`skill-card group/card relative overflow-hidden rounded-2xl border border-border/50 bg-surface/60 backdrop-blur-xl transition-all duration-500 ease-out hover:shadow-lg ${colors.glow} ${
-                visible ? "is-visible" : ""
-              }`}
-              style={{
-                "--stagger": `${catIdx * 200}ms`,
-              } as React.CSSProperties}
-              onMouseMove={handleMouseMove}
-              onMouseLeave={handleMouseLeave}
+          <h2 className="mb-5 text-4xl font-bold tracking-tight text-foreground md:text-5xl lg:text-6xl">
+            Stack{" "}
+            <span
+              className="bg-gradient-to-r from-accent to-accent-secondary bg-clip-text text-transparent"
+              style={{ filter: "drop-shadow(0 0 20px rgba(99,102,241,0.3))" }}
             >
-              {/* accent strip */}
-              <div className={`h-1 w-full ${colors.strip}`} />
+              Técnico
+            </span>
+          </h2>
 
-              <div className="p-6">
-                {/* category header */}
-                <div className="skill-card-title mb-6 flex items-center gap-3">
-                  <span className={colors.text}>
-                    {Icon && <Icon stroke={colors.stroke} />}
-                  </span>
-                  <h3 className="text-sm font-bold uppercase tracking-wider text-foreground">
-                    {cat.name}
-                  </h3>
-                </div>
+          <p className="mx-auto max-w-2xl text-base leading-relaxed text-muted md:text-lg">
+            Tecnologias e ferramentas que domino — construídas ao longo de{" "}
+            <span className="text-foreground">6+ anos</span> desenvolvendo
+            sistemas de alta performance.
+          </p>
 
-                {/* skill bars */}
-                <div className="flex flex-col gap-3">
-                  {cat.skills.map((skill, skillIdx) => (
-                    <SkillBar
-                      key={skill.name}
-                      skill={skill}
-                      colors={colors}
-                      index={skillIdx}
-                      visible={visible}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
-          );
-        })}
+          {/* Decorative line */}
+          <div className="mx-auto mt-8 flex items-center justify-center gap-3">
+            <div className="h-px w-16 bg-gradient-to-r from-transparent to-border" />
+            <div className="h-1 w-1 rounded-full bg-accent" />
+            <div className="h-px w-16 bg-gradient-to-l from-transparent to-border" />
+          </div>
+        </div>
+
+        {/* Grid — 4 columns on xl, 2 on md, 1 on mobile */}
+        <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+          {SKILL_CATEGORIES.map((cat, catIdx) => (
+            <SkillCard
+              key={cat.name}
+              cat={cat}
+              index={catIdx}
+              visible={visible}
+              setRef={setCardRef(catIdx)}
+            />
+          ))}
+        </div>
       </div>
     </section>
   );

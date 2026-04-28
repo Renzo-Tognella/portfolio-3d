@@ -192,7 +192,80 @@
   }
 }
 
-/* ── Skills section — Constellation Grid animations ── */
+/* ── Skills premium ── */
+
+@keyframes skillCardPremiumIn {
+  from {
+    opacity: 0;
+    transform: translateY(50px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes skillHeaderIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes skillBarRowIn {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.skill-card-premium {
+  opacity: 0;
+  transform: translateY(50px) scale(0.96);
+}
+
+.skill-card-premium.is-visible {
+  animation: skillCardPremiumIn 0.8s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
+  animation-delay: var(--stagger, 0ms);
+}
+
+.skill-card-premium.is-visible .skill-card-header {
+  animation: skillHeaderIn 0.5s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
+  animation-delay: calc(var(--stagger, 0ms) + 200ms);
+}
+
+.skill-card-premium.is-visible .skill-bar-row {
+  animation: skillBarRowIn 0.5s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
+  animation-delay: calc(var(--stagger, 0ms) + 300ms + var(--stagger, 0ms));
+}
+
+.skill-bar-fill {
+  transition: width 800ms cubic-bezier(0.215, 0.61, 0.355, 1);
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .skill-card-premium,
+  .skill-card-header,
+  .skill-bar-row {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+  .skill-bar-fill {
+    transition: none;
+  }
+}
+
+/* ── Skills section — Constellation Grid animations (LEGACY) ── */
 
 @keyframes skillCardIn {
   from {
