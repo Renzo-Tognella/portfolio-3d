@@ -8,9 +8,10 @@ import {
   PerformanceMonitor,
   OrbitControls,
   RenderTexture,
-  Text,
 } from "@react-three/drei";
 import * as THREE from "three";
+import { MonitorContent } from "@/components/MonitorContent";
+import { PostitWall } from "@/components/PostitWall";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -172,63 +173,8 @@ function Desk() {
 }
 
 // ---------------------------------------------------------------------------
-// Monitor with RenderTexture + turn-on effect
+// Monitor with RenderTexture + turn-on effect (content now in MonitorContent.tsx)
 // ---------------------------------------------------------------------------
-function MonitorScreenContent() {
-  return (
-    <>
-      <color attach="background" args={["#0d1117"]} />
-      {/* Title */}
-      <Text
-        position={[0, 0.25, 0]}
-        fontSize={0.12}
-        color="#818cf8"
-        anchorX="center"
-        anchorY="middle"
-        maxWidth={1.2}
-      >
-        Sobre
-      </Text>
-      {/* Subtitle */}
-      <Text
-        position={[0, 0.08, 0]}
-        fontSize={0.04}
-        color="#94a3b8"
-        anchorX="center"
-        anchorY="middle"
-        maxWidth={1.4}
-      >
-        Backend Software Engineer
-      </Text>
-      {/* Mini stat cards */}
-      {[
-        { x: -0.35, label: "3+", sub: "anos exp" },
-        { x: 0.0, label: "50+", sub: "prop/dia" },
-        { x: 0.35, label: "IEEE", sub: "LARS/SBR" },
-      ].map((card, i) => (
-        <group key={i} position={[card.x, -0.15, 0]}>
-          <mesh>
-            <planeGeometry args={[0.28, 0.2]} />
-            <meshBasicMaterial color="#161b22" />
-          </mesh>
-          <Text position={[0, 0.04, 0.001]} fontSize={0.05} color="#818cf8" anchorX="center" anchorY="middle">
-            {card.label}
-          </Text>
-          <Text position={[0, -0.04, 0.001]} fontSize={0.025} color="#6b7280" anchorX="center" anchorY="middle">
-            {card.sub}
-          </Text>
-        </group>
-      ))}
-      {/* Code lines decoration */}
-      {[-0.32, -0.22, -0.12].map((y, i) => (
-        <mesh key={`line-${i}`} position={[-0.15 + i * 0.08, y, 0]}>
-          <planeGeometry args={[0.4 + Math.sin(i * 2) * 0.15, 0.012]} />
-          <meshBasicMaterial color="#818cf8" transparent opacity={0.15} />
-        </mesh>
-      ))}
-    </>
-  );
-}
 
 function Monitor({ scrollProgress }: { scrollProgress: number }) {
   const screenRef = useRef<THREE.Mesh>(null);
@@ -283,7 +229,7 @@ function Monitor({ scrollProgress }: { scrollProgress: number }) {
               samples={8}
               anisotropy={16}
             >
-              <MonitorScreenContent />
+              <MonitorContent scrollProgress={scrollProgress} />
             </RenderTexture>
           )}
         </meshStandardMaterial>
@@ -315,7 +261,8 @@ function Monitor({ scrollProgress }: { scrollProgress: number }) {
 // ---------------------------------------------------------------------------
 // Second monitor (smaller, angled)
 // ---------------------------------------------------------------------------
-function SecondMonitor() {
+function SecondMonitor({ scrollProgress }: { scrollProgress: number }) {
+  const secondScreenOn = scrollProgress > 0.2;
   return (
     <group position={[-1.1, 1.35, -0.15]} rotation={[0, 0.35, 0]}>
       <mesh castShadow>
@@ -326,12 +273,24 @@ function SecondMonitor() {
         <planeGeometry args={[1.05, 0.65]} />
         <meshStandardMaterial
           color="#0d1520"
-          emissive="#1E3A5F"
-          emissiveIntensity={0.3}
+          emissive={secondScreenOn ? "#818cf8" : "#1E3A5F"}
+          emissiveIntensity={secondScreenOn ? 1.2 : 0.3}
           roughness={0.1}
           metalness={0.1}
           toneMapped={false}
-        />
+        >
+          {secondScreenOn && (
+            <RenderTexture
+              attach="emissiveMap"
+              width={1024}
+              height={640}
+              samples={8}
+              anisotropy={16}
+            >
+              <PostitWall />
+            </RenderTexture>
+          )}
+        </meshStandardMaterial>
       </mesh>
       <mesh position={[0, -0.45, 0]}>
         <cylinderGeometry args={[0.03, 0.05, 0.15, 8]} />
@@ -1017,7 +976,7 @@ function SceneContent({ tier, scrollProgress }: Scene3DProps) {
       <RubyFrame />
       <Desk />
       <Monitor scrollProgress={scrollProgress} />
-      <SecondMonitor />
+      <SecondMonitor scrollProgress={scrollProgress} />
       <Keyboard />
       <Mouse />
       <CoffeeMachine />
