@@ -311,7 +311,7 @@ export function Hero() {
             display: canvasHidden ? "none" : "block",
           }}
         >
-          <SceneErrorBoundary fallback={<StaticHero />}>
+          <SceneErrorBoundary fallback={null}>
             <Scene3D tier={tier} scrollProgress={scrollProgress} />
           </SceneErrorBoundary>
 

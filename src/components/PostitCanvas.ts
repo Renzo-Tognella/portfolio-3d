@@ -71,27 +71,6 @@ function getGridPositions(count: number, cols: number) {
    Helpers
    ──────────────────────────────────────────── */
 
-function drawRoundedRectPath(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  w: number,
-  h: number,
-  r: number
-) {
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.lineTo(x + w - r, y);
-  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-  ctx.lineTo(x + w, y + h - r);
-  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-  ctx.lineTo(x + r, y + h);
-  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-  ctx.lineTo(x, y + r);
-  ctx.quadraticCurveTo(x, y, x + r, y);
-  ctx.closePath();
-}
-
 function drawPostitNote(
   ctx: CanvasRenderingContext2D,
   cx: number,
@@ -100,13 +79,14 @@ function drawPostitNote(
 ) {
   const w = 80;
   const h = 80;
-  const x = cx - w / 2 + skill.offsetX;
-  const y = cy - h / 2 + skill.offsetY;
 
   ctx.save();
   ctx.translate(cx + skill.offsetX, cy + skill.offsetY);
   ctx.rotate((skill.rotation * Math.PI) / 180);
   ctx.translate(-(cx + skill.offsetX), -(cy + skill.offsetY));
+
+  const x = cx - w / 2 + skill.offsetX;
+  const y = cy - h / 2 + skill.offsetY;
 
   // Shadow
   ctx.shadowColor = "rgba(0,0,0,0.35)";
@@ -114,7 +94,7 @@ function drawPostitNote(
   ctx.shadowOffsetX = 2;
   ctx.shadowOffsetY = 3;
 
-  // Note background with custom rounding (2px top-left, 12px top-right, 2px bottom)
+  // Note background with custom rounding
   ctx.fillStyle = skill.bg;
   ctx.beginPath();
   ctx.moveTo(x + 2, y);
@@ -151,14 +131,6 @@ function drawPostitNote(
   ctx.beginPath();
   ctx.arc(pinX, pinY, 5, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowColor = "rgba(0,0,0,0.3)";
-  ctx.shadowBlur = 3;
-  ctx.shadowOffsetX = 0;
-  ctx.shadowOffsetY = 1;
-  ctx.fill();
-  ctx.shadowColor = "transparent";
-  ctx.shadowBlur = 0;
-  ctx.shadowOffsetY = 0;
 
   // Text
   ctx.fillStyle = skill.textColor;
@@ -197,7 +169,7 @@ function drawPostitNote(
 export function usePostitTexture() {
   const positions = getGridPositions(POSTIT_SKILLS.length, 5);
 
-  const textureRef = useStaticCanvasTexture(1024, 640, (ctx, canvas) => {
+  const texture = useStaticCanvasTexture(1024, 640, (ctx, canvas) => {
     const W = canvas.width;
     const H = canvas.height;
 
@@ -326,5 +298,5 @@ export function usePostitTexture() {
     }
   }, []);
 
-  return textureRef;
+  return texture;
 }

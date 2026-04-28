@@ -501,7 +501,7 @@ function drawStatusBar(
    ──────────────────────────────────────────── */
 
 export function useMonitorTexture(scrollProgress: number) {
-  const textureRef = useStaticCanvasTexture(
+  const texture = useStaticCanvasTexture(
     1920,
     1080,
     (ctx, canvas) => {
@@ -526,5 +526,5 @@ export function useMonitorTexture(scrollProgress: number) {
     [scrollProgress]
   );
 
-  return textureRef;
+  return texture;
 }

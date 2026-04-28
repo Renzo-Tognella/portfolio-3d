@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useCallback } from "react";
+import { useRef, useEffect, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
@@ -10,19 +10,14 @@ import * as THREE from "three";
  * in sync with reactive values (scrollProgress, etc.).
  *
  * Usage:
- *   const texture = useCanvasTexture(1920, 1080, (ctx, canvas) => {
- *     ctx.fillStyle = "#000";
- *     ctx.fillRect(0, 0, canvas.width, canvas.height);
- *     ctx.fillStyle = "#fff";
- *     ctx.fillText("Hello", 100, 100);
- *   });
+ *   const texture = useCanvasTexture(1920, 1080, (ctx, canvas) => { ... });
  */
 export function useCanvasTexture(
   width: number,
   height: number,
   draw: (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => void
 ) {
-  const textureRef = useRef<THREE.CanvasTexture | null>(null);
+  const [texture, setTexture] = useState<THREE.CanvasTexture | null>(null);
   const drawRef = useRef(draw);
 
   // Keep draw callback fresh without recreating the texture
@@ -43,33 +38,33 @@ export function useCanvasTexture(
     tex.anisotropy = 16;
     tex.generateMipmaps = false;
 
-    textureRef.current = tex;
+    setTexture(tex);
 
     return () => {
       tex.dispose();
-      textureRef.current = null;
+      setTexture(null);
     };
   }, [width, height]);
 
   // Redraw every frame
   useFrame(() => {
-    const tex = textureRef.current;
-    if (!tex) return;
+    if (!texture) return;
 
-    const canvas = tex.image as HTMLCanvasElement;
+    const canvas = texture.image as HTMLCanvasElement;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     drawRef.current(ctx, canvas);
-    tex.needsUpdate = true;
+    texture.needsUpdate = true;
   });
 
-  return textureRef;
+  return texture;
 }
 
 /**
  * Static version — draws only when deps change.
  * Use this for content that does NOT animate every frame.
+ * Returns a THREE.CanvasTexture (not a ref) so React re-renders when ready.
  */
 export function useStaticCanvasTexture(
   width: number,
@@ -77,7 +72,7 @@ export function useStaticCanvasTexture(
   draw: (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => void,
   deps: React.DependencyList = []
 ) {
-  const textureRef = useRef<THREE.CanvasTexture | null>(null);
+  const [texture, setTexture] = useState<THREE.CanvasTexture | null>(null);
 
   useEffect(() => {
     const canvas = document.createElement("canvas");
@@ -96,14 +91,14 @@ export function useStaticCanvasTexture(
     tex.anisotropy = 16;
     tex.generateMipmaps = false;
 
-    textureRef.current = tex;
+    setTexture(tex);
 
     return () => {
       tex.dispose();
-      textureRef.current = null;
+      setTexture(null);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [width, height, ...deps]);
 
-  return textureRef;
+  return texture;
 }

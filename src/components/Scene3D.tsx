@@ -11,6 +11,7 @@ import {
 import * as THREE from "three";
 import { useMonitorTexture } from "@/components/MonitorCanvas";
 import { usePostitTexture } from "@/components/PostitCanvas";
+import { useDrawerTexture } from "@/components/DrawerCanvas";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -149,50 +150,7 @@ const DRAWER_PROJECTS = [
 ];
 
 // ---------------------------------------------------------------------------
-// Drawer label rendered in RenderTexture
-// ---------------------------------------------------------------------------
-function DrawerLabel({ project }: { project: { title: string; tech: string; color: string } }) {
-  return (
-    <div
-      style={{
-        width: "100%",
-        height: "100%",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "#0f0f1a",
-        fontFamily: "monospace",
-        padding: "12px",
-        boxSizing: "border-box",
-      }}
-    >
-      <span
-        style={{
-          color: project.color,
-          fontSize: "22px",
-          fontWeight: "bold",
-          marginBottom: "6px",
-        }}
-      >
-        {project.title}
-      </span>
-      <span
-        style={{
-          color: "#94a3b8",
-          fontSize: "10px",
-          textAlign: "center",
-          lineHeight: "1.4",
-        }}
-      >
-        {project.tech}
-      </span>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Individual drawer sub-component — slides open on click
+// Project data for desk drawers
 // ---------------------------------------------------------------------------
 function Drawer({
   project,
@@ -203,6 +161,7 @@ function Drawer({
 }) {
   const [open, setOpen] = useState(false);
   const groupRef = useRef<THREE.Group>(null);
+  const drawerTex = useDrawerTexture(project);
 
   const closedZ = -0.82;
   const openZ = -0.22;
@@ -247,14 +206,14 @@ function Drawer({
           {MAT.wood("#7B5F4A")}
         </mesh>
 
-        {/* Front face — RenderTexture with project info */}
+        {/* Front face — Canvas 2D texture with project info */}
         <mesh position={[0, 0, 0.23]}>
           <planeGeometry args={[0.6, 0.22]} />
-          <meshStandardMaterial roughness={0.1} metalness={0}>
-            <RenderTexture width={512} height={256} samples={4}>
-              <DrawerLabel project={project} />
-            </RenderTexture>
-          </meshStandardMaterial>
+          <meshStandardMaterial
+            roughness={0.1}
+            metalness={0}
+            map={drawerTex ?? undefined}
+          />
         </mesh>
 
         {/* Handle */}
@@ -307,13 +266,13 @@ function InteractiveDesk() {
 }
 
 // ---------------------------------------------------------------------------
-// Monitor with RenderTexture + turn-on effect (content now in MonitorContent.tsx)
+// Monitor with Canvas 2D texture + turn-on effect (content in MonitorCanvas.ts)
 // ---------------------------------------------------------------------------
 
 function Monitor({ scrollProgress }: { scrollProgress: number }) {
   const screenRef = useRef<THREE.Mesh>(null);
   const emissiveIntensity = useRef(0);
-  const monitorTexRef = useMonitorTexture(scrollProgress);
+  const monitorTex = useMonitorTexture(scrollProgress);
 
   // Turn-on curve: screen stays off until progress ~0.3, then glows to full by 0.6
   useFrame((state, delta) => {
@@ -355,7 +314,7 @@ function Monitor({ scrollProgress }: { scrollProgress: number }) {
           roughness={0.1}
           metalness={0.1}
           toneMapped={false}
-          emissiveMap={monitorTexRef.current ?? undefined}
+          emissiveMap={monitorTex ?? undefined}
         />
       </mesh>
       {/* Stand neck */}
@@ -387,7 +346,7 @@ function Monitor({ scrollProgress }: { scrollProgress: number }) {
 // ---------------------------------------------------------------------------
 function SecondMonitor({ scrollProgress }: { scrollProgress: number }) {
   const secondScreenOn = scrollProgress > 0.2;
-  const postitTexRef = usePostitTexture();
+  const postitTex = usePostitTexture();
 
   return (
     <group position={[-1.1, 1.35, -0.15]} rotation={[0, 0.35, 0]}>
@@ -404,7 +363,7 @@ function SecondMonitor({ scrollProgress }: { scrollProgress: number }) {
           roughness={0.1}
           metalness={0.1}
           toneMapped={false}
-          emissiveMap={postitTexRef.current ?? undefined}
+          emissiveMap={postitTex ?? undefined}
         />
       </mesh>
       <mesh position={[0, -0.45, 0]}>
