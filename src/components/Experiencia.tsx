@@ -471,6 +471,20 @@ function ProjectSection({ project, index }: { project: Project; index: number })
 }
 
 /* ────────────────────────────────────────────
+   Background orbs
+   ──────────────────────────────────────────── */
+
+function SectionOrbs({ colors = ["#6366f1", "#06b6d4", "#f43f5e"] }: { colors?: string[] }) {
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+      <div className="absolute -top-[20%] left-[5%] h-[500px] w-[500px] rounded-full blur-[120px]" style={{ background: colors[0], opacity: 0.03 }} />
+      <div className="absolute top-[30%] -right-[5%] h-[400px] w-[400px] rounded-full blur-[100px]" style={{ background: colors[1], opacity: 0.03 }} />
+      <div className="absolute -bottom-[10%] left-[40%] h-[400px] w-[400px] rounded-full blur-[100px]" style={{ background: colors[2], opacity: 0.03 }} />
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────
    Section
    ──────────────────────────────────────────── */
 
@@ -506,39 +520,41 @@ export function Experiencia() {
   }, []);
 
   return (
-    <section id="experience" ref={sectionRef} className="mx-auto max-w-6xl px-6 py-24">
-      {/* —— Section heading —— */}
-      <div className="mb-8">
-        <h2
-          data-reveal-heading
-          className="project-card font-mono text-sm font-semibold uppercase tracking-[0.2em] text-accent"
-        >
-          Experiência
-        </h2>
-        <div
-          data-reveal-heading
-          className="project-card mt-3 h-px w-full overflow-hidden bg-border"
-          style={{ "--stagger": "50ms" } as React.CSSProperties}
-        >
-          <div
-            className="h-full w-1/3 bg-gradient-to-r from-indigo-500 via-cyan-400 to-purple-500"
-            style={{ animation: "shimmer 3s ease-in-out infinite alternate" }}
-          />
-        </div>
-        <p
-          data-reveal-heading
-          className="project-card mt-4 max-w-lg text-sm leading-relaxed text-muted"
-          style={{ "--stagger": "100ms" } as React.CSSProperties}
-        >
-          Trajetória profissional em sistemas de missão crítica, integrações corporativas e pesquisa aplicada.
-        </p>
-      </div>
+    <section id="experience" ref={sectionRef} className="relative w-full overflow-hidden py-28 md:py-36">
+      <SectionOrbs colors={["#06b6d4", "#6366f1", "#f43f5e"]} />
 
-      {/* ── Project sections ── */}
-      <div className="flex flex-col">
-        {PROJECTS.map((project, i) => (
-          <ProjectSection key={project.title} project={project} index={i} />
-        ))}
+      <div className="relative z-10 mx-auto max-w-7xl px-6 md:px-10">
+        {/* —— Section heading —— */}
+        <div className="mb-20 text-center">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/5 bg-white/[0.02] px-4 py-1.5 backdrop-blur-sm">
+            <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
+            <span className="font-mono text-xs uppercase tracking-widest text-muted">Carreira</span>
+          </div>
+          <h2 className="mb-5 text-4xl font-bold tracking-tight text-foreground md:text-5xl lg:text-6xl">
+            Experiência{" "}
+            <span
+              className="bg-gradient-to-r from-accent to-accent-secondary bg-clip-text text-transparent"
+              style={{ filter: "drop-shadow(0 0 20px rgba(99,102,241,0.3))" }}
+            >
+              Profissional
+            </span>
+          </h2>
+          <p className="mx-auto max-w-2xl text-base leading-relaxed text-muted md:text-lg">
+            Trajetória em sistemas de missão crítica, integrações corporativas e pesquisa aplicada.
+          </p>
+          <div className="mx-auto mt-8 flex items-center justify-center gap-3">
+            <div className="h-px w-16 bg-gradient-to-r from-transparent to-border" />
+            <div className="h-1 w-1 rounded-full bg-accent" />
+            <div className="h-px w-16 bg-gradient-to-l from-transparent to-border" />
+          </div>
+        </div>
+
+        {/* —— Project sections —— */}
+        <div className="flex flex-col">
+          {PROJECTS.map((project, i) => (
+            <ProjectSection key={project.title} project={project} index={i} />
+          ))}
+        </div>
       </div>
     </section>
   );

@@ -298,21 +298,74 @@ function TimelineCard({ entry }: { entry: (typeof TIMELINE)[number] }) {
 }
 
 // ---------------------------------------------------------------------------
+// Reusable: Background orbs
+// ---------------------------------------------------------------------------
+function SectionOrbs({ colors = ["#6366f1", "#06b6d4", "#f43f5e"] }: { colors?: string[] }) {
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+      <div className="absolute -top-[20%] left-[5%] h-[500px] w-[500px] rounded-full blur-[120px]" style={{ background: colors[0], opacity: 0.03 }} />
+      <div className="absolute top-[30%] -right-[5%] h-[400px] w-[400px] rounded-full blur-[100px]" style={{ background: colors[1], opacity: 0.03 }} />
+      <div className="absolute -bottom-[10%] left-[40%] h-[400px] w-[400px] rounded-full blur-[100px]" style={{ background: colors[2], opacity: 0.03 }} />
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Reusable: Premium section heading
+// ---------------------------------------------------------------------------
+function SectionHeading({
+  badge,
+  title,
+  titleGradient,
+  subtitle,
+}: {
+  badge: string;
+  title: string;
+  titleGradient: string;
+  subtitle: string;
+}) {
+  return (
+    <div className="mb-20 text-center">
+      <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/5 bg-white/[0.02] px-4 py-1.5 backdrop-blur-sm">
+        <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
+        <span className="font-mono text-xs uppercase tracking-widest text-muted">{badge}</span>
+      </div>
+      <h2 className="mb-5 text-4xl font-bold tracking-tight text-foreground md:text-5xl lg:text-6xl">
+        {title}{" "}
+        <span
+          className="bg-gradient-to-r from-accent to-accent-secondary bg-clip-text text-transparent"
+          style={{ filter: "drop-shadow(0 0 20px rgba(99,102,241,0.3))" }}
+        >
+          {titleGradient}
+        </span>
+      </h2>
+      <p className="mx-auto max-w-2xl text-base leading-relaxed text-muted md:text-lg">
+        {subtitle}
+      </p>
+      <div className="mx-auto mt-8 flex items-center justify-center gap-3">
+        <div className="h-px w-16 bg-gradient-to-r from-transparent to-border" />
+        <div className="h-1 w-1 rounded-full bg-accent" />
+        <div className="h-px w-16 bg-gradient-to-l from-transparent to-border" />
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // About section — orchestrator
 // ---------------------------------------------------------------------------
 export function About() {
   return (
-    <section id="about" className="mx-auto max-w-6xl px-6 py-24">
-      {/* Section header */}
-      <h2 className="mb-3 font-mono text-sm font-semibold uppercase tracking-widest text-accent">
-        Sobre
-      </h2>
-      <div className="relative mb-3 h-[3px] w-48 overflow-hidden rounded-full bg-surface">
-        <div className="animate-shimmer absolute inset-y-0 w-1/3 rounded-full bg-gradient-to-r from-accent to-accent-secondary" />
-      </div>
-      <p className="mb-14 max-w-md text-sm text-muted">
-        Engenheiro de software com foco em backend, sistemas distribuídos e pesquisa aplicada.
-      </p>
+    <section id="about" className="relative w-full overflow-hidden py-28 md:py-36">
+      <SectionOrbs colors={["#6366f1", "#f59e0b", "#06b6d4"]} />
+
+      <div className="relative z-10 mx-auto max-w-7xl px-6 md:px-10">
+        <SectionHeading
+          badge="Perfil"
+          title="Sobre"
+          titleGradient="Mim"
+          subtitle="Engenheiro de software com foco em backend, sistemas distribuídos e pesquisa aplicada."
+        />
 
       {/* Block 1: Terminal Bio */}
       <div className="mb-16">
@@ -335,6 +388,7 @@ export function About() {
           Trajetória
         </h3>
         <CareerTimeline />
+      </div>
       </div>
     </section>
   );
