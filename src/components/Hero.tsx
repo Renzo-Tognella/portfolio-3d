@@ -299,8 +299,8 @@ export function Hero() {
       ref={heroSectionRef}
       className="relative w-full"
     >
-      {/* Scroll spacer — 300vh (reduced from 400vh for snappier feel) */}
-      <div data-scroll-spacer className="relative h-[300vh]">
+      {/* Scroll spacer — 200vh (reduced from 300vh for snappier feel) */}
+      <div data-scroll-spacer className="relative h-[200vh]">
         {/* Sticky canvas container */}
         <div
           ref={canvasWrapperRef}

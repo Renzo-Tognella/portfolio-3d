@@ -163,8 +163,8 @@ function Drawer({
   const groupRef = useRef<THREE.Group>(null);
   const drawerTex = useDrawerTexture(project);
 
-  const closedZ = -0.82;
-  const openZ = -0.22;
+  const closedZ = -0.08;
+  const openZ = 0.32;
   const xPos = (index - 1) * 0.85;
 
   useFrame((_, delta) => {
@@ -179,7 +179,7 @@ function Drawer({
   });
 
   return (
-    <group position={[xPos, 0.35, 0]}>
+    <group position={[xPos, 0.35, 0.6]}>
       {/* Cavity — visible when drawer slides out */}
       <mesh position={[0, 0, closedZ]}>
         <boxGeometry args={[0.7, 0.32, 0.46]} />

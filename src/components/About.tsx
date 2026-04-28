@@ -42,50 +42,6 @@ const TIMELINE = [
   },
 ];
 
-const TECH_STACK = [
-  {
-    category: "Backend",
-    color: "#6366f1",
-    skills: [
-      { name: "Ruby on Rails", pct: 95 },
-      { name: "Python", pct: 85 },
-      { name: "Java", pct: 70 },
-      { name: "REST APIs", pct: 95 },
-      { name: "RSpec / TDD", pct: 85 },
-    ],
-  },
-  {
-    category: "Bancos de Dados",
-    color: "#06b6d4",
-    skills: [
-      { name: "PostgreSQL", pct: 90 },
-      { name: "Redis", pct: 80 },
-      { name: "MongoDB", pct: 65 },
-      { name: "SQL Avançado", pct: 85 },
-    ],
-  },
-  {
-    category: "Infraestrutura",
-    color: "#f59e0b",
-    skills: [
-      { name: "Docker", pct: 85 },
-      { name: "AWS", pct: 75 },
-      { name: "Git", pct: 90 },
-      { name: "CI/CD", pct: 80 },
-    ],
-  },
-  {
-    category: "Qualidade & IA",
-    color: "#f43f5e",
-    skills: [
-      { name: "Clean Architecture", pct: 90 },
-      { name: "SOLID / Design Patterns", pct: 85 },
-      { name: "LLMs / MCP", pct: 80 },
-      { name: "C++ / Computer Vision", pct: 70 },
-    ],
-  },
-];
-
 const TERMINAL_LINES = [
   { type: "prompt", text: 'cat about.md' },
   { type: "blank" },
@@ -342,57 +298,6 @@ function TimelineCard({ entry }: { entry: (typeof TIMELINE)[number] }) {
 }
 
 // ---------------------------------------------------------------------------
-// Block 5: Tech Stack Grid
-// ---------------------------------------------------------------------------
-function TechCategoryCard({ cat, index }: { cat: (typeof TECH_STACK)[number]; index: number }) {
-  const { ref, visible } = useReveal();
-  return (
-    <div
-      ref={ref}
-      className={`about-tech-card ${visible ? "is-visible" : ""}`}
-      style={{ "--stagger": `${index * 100}ms`, "--card-color": cat.color } as React.CSSProperties}
-    >
-      <div className="h-1 w-full rounded-full" style={{ background: cat.color }} />
-      <div className="p-5">
-        <h4 className="mb-4 text-sm font-bold uppercase tracking-wider text-foreground">
-          {cat.category}
-        </h4>
-        <div className="flex flex-col gap-3">
-          {cat.skills.map((skill, si) => (
-            <div key={skill.name} className="about-skill-row" style={{ "--bar-stagger": `${si * 60}ms` } as React.CSSProperties}>
-              <div className="mb-1 flex items-center justify-between">
-                <span className="font-mono text-xs text-foreground/80">{skill.name}</span>
-                <span className="font-mono text-[10px]" style={{ color: cat.color }}>{skill.pct}%</span>
-              </div>
-              <div className="h-1.5 w-full overflow-hidden rounded-full" style={{ background: `${cat.color}20` }}>
-                <div
-                  className="about-skill-bar h-full rounded-full"
-                  style={{
-                    width: "0%",
-                    background: cat.color,
-                    "--target-width": `${skill.pct}%`,
-                  } as React.CSSProperties}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function TechStackGrid() {
-  return (
-    <div className="grid gap-4 sm:grid-cols-2">
-      {TECH_STACK.map((cat, ci) => (
-        <TechCategoryCard key={cat.category} cat={cat} index={ci} />
-      ))}
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
 // About section — orchestrator
 // ---------------------------------------------------------------------------
 export function About() {
@@ -425,19 +330,11 @@ export function About() {
       </div>
 
       {/* Block 4: Career Timeline */}
-      <div className="mb-16">
+      <div>
         <h3 className="mb-8 font-mono text-xs uppercase tracking-wider text-accent">
           Trajetória
         </h3>
         <CareerTimeline />
-      </div>
-
-      {/* Block 5: Tech Stack */}
-      <div>
-        <h3 className="mb-8 font-mono text-xs uppercase tracking-wider text-accent">
-          Tecnologias
-        </h3>
-        <TechStackGrid />
       </div>
     </section>
   );

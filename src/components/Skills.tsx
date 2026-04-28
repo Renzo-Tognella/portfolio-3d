@@ -19,7 +19,7 @@ interface Skill {
 
 interface Category {
   name: string;
-  accent: "indigo" | "cyan" | "amber" | "rose";
+  accent: "indigo" | "cyan" | "amber" | "rose" | "violet";
   skills: Skill[];
 }
 
@@ -30,29 +30,30 @@ const SKILL_CATEGORIES: Category[] = [
     skills: [
       { name: "Ruby on Rails", level: 95 },
       { name: "Python", level: 85 },
-      { name: "Java", level: 70 },
-      { name: "REST APIs", level: 95 },
+      { name: "Java / Spring", level: 70 },
+      { name: "REST APIs / GraphQL", level: 90 },
       { name: "RSpec / TDD", level: 85 },
     ],
   },
   {
-    name: "Bancos de Dados",
+    name: "Frontend",
+    accent: "violet",
+    skills: [
+      { name: "React / Next.js", level: 88 },
+      { name: "TypeScript", level: 90 },
+      { name: "Tailwind CSS", level: 85 },
+      { name: "Three.js / R3F", level: 75 },
+    ],
+  },
+  {
+    name: "Dados & Infra",
     accent: "cyan",
     skills: [
       { name: "PostgreSQL", level: 90 },
       { name: "Redis", level: 80 },
       { name: "MongoDB", level: 65 },
-      { name: "SQL Avançado", level: 85 },
-    ],
-  },
-  {
-    name: "Infraestrutura",
-    accent: "amber",
-    skills: [
       { name: "Docker", level: 85 },
       { name: "AWS", level: 75 },
-      { name: "Git", level: 90 },
-      { name: "CI/CD", level: 80 },
     ],
   },
   {
@@ -61,7 +62,8 @@ const SKILL_CATEGORIES: Category[] = [
     skills: [
       { name: "Clean Architecture", level: 90 },
       { name: "SOLID / Design Patterns", level: 85 },
-      { name: "LLMs / MCP", level: 80 },
+      { name: "LLMs / MCP / Agents", level: 80 },
+      { name: "Git / CI/CD", level: 90 },
       { name: "C++ / Computer Vision", level: 70 },
     ],
   },
@@ -75,6 +77,15 @@ const ACCENT_COLORS = {
     barFill: "bg-indigo-500",
     text: "text-indigo-400",
     stroke: "#6366f1",
+    glow: "shadow-indigo-500/20",
+  },
+  violet: {
+    strip: "bg-violet-500",
+    barBg: "bg-violet-500/15",
+    barFill: "bg-violet-500",
+    text: "text-violet-400",
+    stroke: "#8b5cf6",
+    glow: "shadow-violet-500/20",
   },
   cyan: {
     strip: "bg-cyan-500",
@@ -82,6 +93,7 @@ const ACCENT_COLORS = {
     barFill: "bg-cyan-500",
     text: "text-cyan-400",
     stroke: "#06b6d4",
+    glow: "shadow-cyan-500/20",
   },
   amber: {
     strip: "bg-amber-500",
@@ -89,6 +101,7 @@ const ACCENT_COLORS = {
     barFill: "bg-amber-500",
     text: "text-amber-400",
     stroke: "#f59e0b",
+    glow: "shadow-amber-500/20",
   },
   rose: {
     strip: "bg-rose-500",
@@ -96,6 +109,7 @@ const ACCENT_COLORS = {
     barFill: "bg-rose-500",
     text: "text-rose-400",
     stroke: "#f43f5e",
+    glow: "shadow-rose-500/20",
   },
 } as const;
 
@@ -141,10 +155,22 @@ function QualityIcon({ stroke }: { stroke: string }) {
   );
 }
 
+function FrontendIcon({ stroke }: { stroke: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className="skill-svg h-7 w-7" style={{ color: stroke }}>
+      <rect className="skill-svg-path" x="2" y="3" width="20" height="14" rx="2" />
+      <path className="skill-svg-path" d="M8 21h8" />
+      <path className="skill-svg-path" d="M12 17v4" />
+      <path className="skill-svg-path" d="m7 8 3 3-3 3" />
+      <path className="skill-svg-path" d="m13 8 3 3-3 3" />
+    </svg>
+  );
+}
+
 const CATEGORY_ICONS: Record<string, (props: { stroke: string }) => ReactElement> = {
   "Backend": BackendIcon,
-  "Bancos de Dados": DatabaseIcon,
-  "Infraestrutura": InfraIcon,
+  "Frontend": FrontendIcon,
+  "Dados & Infra": DatabaseIcon,
   "Qualidade & IA": QualityIcon,
 };
 
@@ -266,21 +292,21 @@ export function Skills() {
 
   return (
     <section ref={sectionRef} id="skills" className="mx-auto max-w-6xl px-6 py-24">
-      {/* ── heading ── */}
+      {/* —— heading —— */}
       <div className="mb-14">
         <h2 className="mb-3 font-mono text-sm font-semibold uppercase tracking-widest text-accent">
-          Skills &amp; Technologies
+          Skills
         </h2>
         <div className="relative mb-3 h-[3px] w-48 overflow-hidden rounded-full bg-surface">
           <div className="animate-shimmer absolute inset-y-0 w-1/3 rounded-full bg-gradient-to-r from-accent to-accent-secondary" />
         </div>
-        <p className="max-w-md text-sm text-muted">
-          Tecnologias e ferramentas que uso no dia-a-dia.
+        <p className="max-w-lg text-sm text-muted">
+          Stack técnico e competências desenvolvidas ao longo de 6+ anos construindo sistemas de alta performance.
         </p>
       </div>
 
-      {/* ── 2×2 constellation grid ── */}
-      <div className="grid gap-6 sm:grid-cols-2">
+      {/* —— 2×2 constellation grid —— */}
+      <div className="grid gap-5 sm:grid-cols-2">
         {SKILL_CATEGORIES.map((cat, catIdx) => {
           const colors = ACCENT_COLORS[cat.accent];
           const Icon = CATEGORY_ICONS[cat.name];
@@ -289,7 +315,7 @@ export function Skills() {
             <div
               key={cat.name}
               ref={setCardRef(catIdx)}
-              className={`skill-card group/card relative overflow-hidden rounded-2xl border border-border/50 bg-surface/60 backdrop-blur-xl transition-transform duration-300 ease-out ${
+              className={`skill-card group/card relative overflow-hidden rounded-2xl border border-border/50 bg-surface/60 backdrop-blur-xl transition-all duration-500 ease-out hover:shadow-lg ${colors.glow} ${
                 visible ? "is-visible" : ""
               }`}
               style={{
