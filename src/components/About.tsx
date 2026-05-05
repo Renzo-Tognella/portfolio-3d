@@ -200,50 +200,6 @@ function useReveal(threshold = 0.1) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// Stat Cards — rendered as code
-// ═══════════════════════════════════════════════════════════════
-
-const STATS_DATA = [
-  { value: 3, suffix: "+", label: "anos de experiência", icon: "⏳" },
-  { value: 50, suffix: "+", label: "propostas/dia — Modulus", icon: "⚡" },
-  { value: 1, suffix: "", label: "publicação IEEE", icon: "📄" },
-  { value: 3, suffix: "", label: "meses como lead interino", icon: "👥" },
-];
-
-function StatLine({ stat, index, visible }: { stat: typeof STATS_DATA[number]; index: number; visible: boolean }) {
-  const { ref } = useReveal();
-  const [count, setCount] = useState(0);
-
-  useEffect(() => {
-    if (!visible) return;
-    const duration = 1500;
-    const start = performance.now();
-    let frame: number;
-    const animate = (now: number) => {
-      const elapsed = now - start;
-      const progress = Math.min(elapsed / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setCount(Math.round(eased * stat.value));
-      if (progress < 1) frame = requestAnimationFrame(animate);
-    };
-    frame = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(frame);
-  }, [visible, stat.value]);
-
-  return (
-    <div ref={ref} className="flex items-center gap-4 py-3 group">
-      <span className="text-lg">{stat.icon}</span>
-      <span className="font-mono text-3xl font-bold text-foreground tabular-nums w-16">
-        {count}{stat.suffix}
-      </span>
-      <span className="text-sm text-muted/70 group-hover:text-muted transition-colors">
-        {stat.label}
-      </span>
-    </div>
-  );
-}
-
-// ═══════════════════════════════════════════════════════════════
 // Main IDE About Section
 // ═══════════════════════════════════════════════════════════════
 
@@ -446,30 +402,58 @@ export function About() {
                 )}
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* ── Stats Row (below IDE) ── */}
-        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {STATS_DATA.map((stat, i) => (
-            <div
-              key={i}
-              className="rounded-xl border p-5 transition-all duration-500 hover:-translate-y-1"
-              style={{
-                borderColor: "rgba(255,255,255,0.05)",
-                background: "linear-gradient(160deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.005) 100%)",
-                backdropFilter: "blur(12px)",
-                transitionDelay: `${i * 100}ms`,
-                opacity: visible ? 1 : 0,
-                transform: visible ? "translateY(0)" : "translateY(16px)",
-                boxShadow: visible ? "0 0 0 1px rgba(255,255,255,0.02)" : "none",
-              }}
-            >
-              <StatLine stat={stat} index={i} visible={visible} />
+            {/* ── IDE Status Bar ── */}
+            <div className="flex items-center gap-6 border-t border-white/[0.04] bg-[#0d1117]/95 px-4 py-2">
+              <StatusMetric icon="⏳" value={3} suffix="+" label="anos exp" visible={visible} />
+              <span className="text-[10px] text-muted/15">|</span>
+              <StatusMetric icon="⚡" value={50} suffix="+" label="prop/dia" visible={visible} />
+              <span className="text-[10px] text-muted/15">|</span>
+              <StatusMetric icon="📄" value={1} suffix="" label="IEEE" visible={visible} />
+              <span className="text-[10px] text-muted/15">|</span>
+              <StatusMetric icon="👥" value={3} suffix="" label="meses lead" visible={visible} />
+              <div className="ml-auto flex items-center gap-3">
+                <span className="font-mono text-[9px] text-muted/25">UTF-8</span>
+                <span className="font-mono text-[9px] text-muted/25">TypeScript</span>
+                <span className="font-mono text-[9px] text-accent/50">✦</span>
+              </div>
             </div>
-          ))}
+          </div>
         </div>
       </div>
     </section>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Status bar metric (inline counter)
+// ═══════════════════════════════════════════════════════════════
+
+function StatusMetric({
+  icon, value, suffix, label, visible,
+}: {
+  icon: string; value: number; suffix: string; label: string; visible: boolean;
+}) {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    if (!visible) return;
+    let frame: number;
+    const duration = 1200;
+    const start = performance.now();
+    const animate = (now: number) => {
+      const p = Math.min((now - start) / duration, 1);
+      setCount(Math.round((1 - Math.pow(1 - p, 3)) * value));
+      if (p < 1) frame = requestAnimationFrame(animate);
+    };
+    frame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frame);
+  }, [visible, value]);
+
+  return (
+    <div className="flex items-center gap-1.5 font-mono text-[10px] text-muted/50 hover:text-muted/80 transition-colors">
+      <span className="text-[11px]">{icon}</span>
+      <span className="tabular-nums text-foreground/70 font-medium">{count}{suffix}</span>
+      <span className="text-muted/30">{label}</span>
+    </div>
   );
 }
