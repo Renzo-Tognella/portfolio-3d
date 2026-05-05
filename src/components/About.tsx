@@ -300,7 +300,7 @@ export function About() {
         }}
       />
 
-      <div className="relative z-10 mx-auto max-w-6xl px-6 md:px-10">
+      <div className="relative z-10 mx-auto max-w-full px-6 md:px-10">
         {/* ── Heading ── */}
         <div className="mb-16 text-center">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/5 bg-white/[0.02] px-4 py-1.5 backdrop-blur-sm">
@@ -350,7 +350,7 @@ export function About() {
             </button>
           </div>
 
-          <div className="flex min-h-[420px]">
+          <div className="flex h-[520px]">
             {/* ── Sidebar ── */}
             <div
               className="shrink-0 overflow-hidden border-r border-white/[0.04] bg-[#0d1117]/50 transition-all duration-300"
