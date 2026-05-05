@@ -136,26 +136,26 @@ const FILE_ICONS: Record<string, string> = {
 function highlightLine(line: string, language: string) {
   if (language === "json") {
     return line
-      .replace(/("(?:\\.|[^"\\])*")\s*:/g, '<span class="text-cyan-400">$1</span>:')
-      .replace(/: "((?:\\.|[^"\\])*)"/g, ': <span class="text-amber-300">"$1"</span>')
+      .replace(/("(?:\\.|[^"\\])*")\s*:/g, '<span class="text-cyan-400/70">$1</span>:')
+      .replace(/: "((?:\\.|[^"\\])*)"/g, ': <span class="text-accent font-semibold" style="text-shadow:0 0 12px rgba(99,102,241,0.4)">"$1"</span>')
       .replace(/: (\d+)/g, ': <span class="text-rose-400">$1</span>')
-      .replace(/[{}[\]]/g, '<span class="text-muted">$&</span>');
+      .replace(/[{}[\]]/g, '<span class="text-muted/30">$&</span>');
   }
   if (language === "typescript") {
     return line
-      .replace(/\b(const|let|var|export|import|from|interface|type|as)\b/g, '<span class="text-violet-400">$1</span>')
-      .replace(/("(?:\\.|[^"\\])*"|'[^']*'|`[^`]*`)/g, '<span class="text-amber-300">$1</span>')
-      .replace(/\b(string|number|boolean|void|any|never|Profile|Stat)\b/g, '<span class="text-cyan-400">$1</span>')
+      .replace(/\b(const|let|var|export|import|from|interface|type|as)\b/g, '<span class="text-violet-400/60">$1</span>')
+      .replace(/("(?:\\.|[^"\\])*"|'[^']*'|`[^`]*`)/g, '<span class="text-accent font-semibold" style="text-shadow:0 0 12px rgba(99,102,241,0.4)">$1</span>')
+      .replace(/\b(string|number|boolean|void|any|never|Profile|Stat)\b/g, '<span class="text-cyan-400/70">$1</span>')
       .replace(/\b(\d+(\.\d+)?)\b/g, '<span class="text-rose-400">$1</span>')
-      .replace(/(\/\/.*$)/g, '<span class="text-muted/50 italic">$1</span>')
-      .replace(/([{}[\]();:,]|\{|\}|=>)/g, '<span class="text-muted">$1</span>');
+      .replace(/(\/\/.*$)/g, '<span class="text-muted/30 italic">$1</span>')
+      .replace(/([{}[\]();:,]|\{|\}|=>)/g, '<span class="text-muted/30">$1</span>');
   }
   if (language === "markdown") {
     return line
       .replace(/^(#{1,6}\s.+)$/, '<span class="text-indigo-400 font-bold">$1</span>')
-      .replace(/(\[.*?\])\(.*?\)/g, '<span class="text-cyan-400">$1</span>')
-      .replace(/`([^`]+)`/g, '<span class="text-rose-400">`$1`</span>')
-      .replace(/^(\s*[-*]\s)/, '<span class="text-accent">$1</span>');
+      .replace(/(\[.*?\])\(.*?\)/g, '<span class="text-accent font-semibold" style="text-shadow:0 0 8px rgba(99,102,241,0.3)">$1</span>')
+      .replace(/`([^`]+)`/g, '<span class="text-accent">`$1`</span>')
+      .replace(/^(\s*[-*]\s)/, '<span class="text-accent/60">$1</span>');
   }
   return line;
 }
