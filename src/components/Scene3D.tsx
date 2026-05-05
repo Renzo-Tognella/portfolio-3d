@@ -183,10 +183,10 @@ function Drawer({
       {/* Cavity — larger than drawer body to prevent wall z-fighting */}
       <mesh position={[0, 0, closedZ]}>
         <boxGeometry args={[0.7, 0.32, 0.48]} />
-        <meshStandardMaterial color="#0a0a0a" roughness={0.9} />
+        <meshStandardMaterial color="#0a0a0a" roughness={0.9} depthWrite={false} />
       </mesh>
 
-      {/* Drawer body — smaller than cavity on all axes (0.08 clearance per side) */}
+      {/* Drawer body — smaller than cavity on all axes (0.04 clearance per side) */}
       <group ref={groupRef} position={[0, 0, closedZ + 0.02]}>
         {/* Drawer box */}
         <mesh
@@ -308,8 +308,8 @@ function Monitor({ scrollProgress }: { scrollProgress: number }) {
       <mesh ref={screenRef} position={[0, 0, 0.035]}>
         <planeGeometry args={[1.65, 0.95]} />
         <meshStandardMaterial
-          emissive={isScreenOn ? "#6366f1" : "#1E3A5F"}
-          emissiveIntensity={isScreenOn ? 0 : 0.3}
+          emissive={isScreenOn ? "#ffffff" : "#ffffff"}
+          emissiveIntensity={isScreenOn ? 0 : 0.15}
           color="#0d1520"
           roughness={0.1}
           metalness={0.1}
@@ -349,7 +349,7 @@ function SecondMonitor({ scrollProgress }: { scrollProgress: number }) {
   const postitTex = usePostitTexture();
 
   return (
-    <group position={[-1.35, 1.3, -0.2]} rotation={[0, 0.25, 0]}>
+    <group position={[-1.35, 1.3, -0.2]} rotation={[0, 0.8, 0]}>
       <mesh castShadow>
         <boxGeometry args={[0.85, 0.58, 0.05]} />
         <meshStandardMaterial color="#22223a" roughness={0.25} metalness={0.6} />
@@ -357,9 +357,9 @@ function SecondMonitor({ scrollProgress }: { scrollProgress: number }) {
       <mesh position={[0, 0, 0.03]}>
         <planeGeometry args={[0.72, 0.45]} />
         <meshStandardMaterial
+          emissive={secondScreenOn ? "#ffffff" : "#ffffff"}
+          emissiveIntensity={secondScreenOn ? 0.8 : 0.25}
           color="#0d1520"
-          emissive={secondScreenOn ? "#818cf8" : "#1E3A5F"}
-          emissiveIntensity={secondScreenOn ? 1.2 : 0.3}
           roughness={0.1}
           metalness={0.1}
           toneMapped={false}
@@ -486,7 +486,7 @@ function CoffeeMachine() {
         {MAT.metal("#2A2A2A")}
       </mesh>
       {/* Water tank (glass) */}
-      <mesh position={[0.2, 0.25, 0]}>
+      <mesh position={[0.1, 0.25, 0]}>
         <boxGeometry args={[0.12, 0.4, 0.25]} />
         {MAT.glass("#66aadd")}
       </mesh>
@@ -542,7 +542,7 @@ function DeskLamp() {
   });
 
   return (
-    <group position={[-1.65, 0.79, -0.55]}>
+    <group position={[-1.65, 0.805, -0.55]}>
       {/* Base */}
       <mesh castShadow>
         <cylinderGeometry args={[0.12, 0.14, 0.03, 16]} />
@@ -652,7 +652,7 @@ function Book({ color, width, index, category }: BookProps) {
   });
 
   useEffect(() => {
-    targetOpen.current = isOpen ? -Math.PI * 0.78 : 0;
+    targetOpen.current = isOpen ? -Math.PI * 0.55 : 0;
   }, [isOpen]);
 
   useEffect(() => {
@@ -714,7 +714,7 @@ function Book({ color, width, index, category }: BookProps) {
   return (
     <group
       ref={groupRef}
-      position={[index * 0.02, 0.04 + index * 0.05, 0]}
+      position={[index * 0.06, 0.04 + index * 0.05, 0]}
     >
       {/* Pages block — revealed when cover opens */}
       <mesh castShadow>
@@ -779,7 +779,7 @@ function Book({ color, width, index, category }: BookProps) {
 
 function InteractiveBooks() {
   const bookColors = ["#8B4513", "#1E3A5F", "#5B2C6F", "#7B241C"];
-  const bookWidths = [0.25, 0.2, 0.22, 0.18];
+  const bookWidths = [0.35, 0.28, 0.30, 0.25];
 
   return (
     <group position={[0.75, 0.79, -0.45]}>
@@ -801,7 +801,7 @@ function InteractiveBooks() {
 // ---------------------------------------------------------------------------
 function CoffeeMug() {
   return (
-    <group position={[-0.7, 0.79, 0.15]}>
+    <group position={[-0.7, 0.84, 0.15]}>
       <mesh castShadow>
         <cylinderGeometry args={[0.05, 0.045, 0.1, 16]} />
         {MAT.ceramic("#C85A4A")}
@@ -849,7 +849,7 @@ function Plant() {
   );
 
   return (
-    <group position={[-1.4, 0.79, 0.35]}>
+    <group position={[-1.4, 0.835, 0.35]}>
       {/* Pot */}
       <mesh castShadow>
         <cylinderGeometry args={[0.07, 0.055, 0.09, 12]} />
@@ -884,7 +884,7 @@ function Plant() {
 // ---------------------------------------------------------------------------
 function Headphones() {
   return (
-    <group position={[0.4, 0.79, 0.15]} rotation={[0, -0.3, 0]}>
+    <group position={[0.4, 0.94, 0.15]} rotation={[0, -0.3, 0]}>
       {/* Stand */}
       <mesh castShadow>
         <cylinderGeometry args={[0.025, 0.04, 0.3, 8]} />
@@ -1222,7 +1222,7 @@ function Lights() {
 
       {/* Desk lamp practical — warm pool */}
       <pointLight
-        position={[-1.65, 1.6, -0.5]}
+        position={[-1.7, 1.7, -0.5]}
         intensity={0.5}
         color="#FFE0A0"
         distance={4}
