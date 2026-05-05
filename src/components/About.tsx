@@ -350,7 +350,7 @@ export function About() {
             </button>
           </div>
 
-          <div className="flex h-[520px]">
+          <div className="flex h-[920px]">
             {/* ── Sidebar ── */}
             <div
               className="shrink-0 overflow-hidden border-r border-white/[0.04] bg-[#0d1117]/50 transition-all duration-300"
