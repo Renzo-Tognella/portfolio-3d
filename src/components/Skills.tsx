@@ -7,70 +7,11 @@ import {
   useState,
   type ReactElement,
 } from "react";
-
-/* ────────────────────────────────────────────
-   Data
-   ──────────────────────────────────────────── */
-
-interface Skill {
-  name: string;
-  level: number;
-}
-
-interface Category {
-  name: string;
-  accent: "indigo" | "cyan" | "amber" | "rose" | "violet";
-  skills: Skill[];
-}
-
-const SKILL_CATEGORIES: Category[] = [
-  {
-    name: "Backend",
-    accent: "indigo",
-    skills: [
-      { name: "Ruby on Rails", level: 95 },
-      { name: "Python", level: 85 },
-      { name: "Java / Spring", level: 70 },
-      { name: "REST APIs / GraphQL", level: 90 },
-      { name: "RSpec / TDD", level: 85 },
-    ],
-  },
-  {
-    name: "Frontend",
-    accent: "violet",
-    skills: [
-      { name: "React / Next.js", level: 88 },
-      { name: "TypeScript", level: 90 },
-      { name: "Tailwind CSS", level: 85 },
-      { name: "Three.js / R3F", level: 75 },
-    ],
-  },
-  {
-    name: "Dados & Infra",
-    accent: "cyan",
-    skills: [
-      { name: "PostgreSQL", level: 90 },
-      { name: "Redis", level: 80 },
-      { name: "MongoDB", level: 65 },
-      { name: "Docker", level: 85 },
-      { name: "AWS", level: 75 },
-    ],
-  },
-  {
-    name: "Qualidade & IA",
-    accent: "rose",
-    skills: [
-      { name: "Clean Architecture", level: 90 },
-      { name: "SOLID / Design Patterns", level: 85 },
-      { name: "LLMs / MCP / Agents", level: 80 },
-      { name: "Git / CI/CD", level: 90 },
-      { name: "C++ / Computer Vision", level: 70 },
-    ],
-  },
-];
+import { SKILL_CATEGORIES } from "@/data/skills";
+import type { Skill, SkillCategory } from "@/data/skills";
 
 const ACCENT_META: Record<
-  Category["accent"],
+  SkillCategory["accent"],
   {
     text: string;
     textStrong: string;
@@ -269,7 +210,7 @@ function SkillCard({
   visible,
   setRef,
 }: {
-  cat: Category;
+  cat: SkillCategory;
   index: number;
   visible: boolean;
   setRef: (el: HTMLDivElement | null) => void;

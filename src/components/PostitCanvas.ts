@@ -3,7 +3,7 @@
 import { useStaticCanvasTexture } from "@/hooks/useCanvasTexture";
 
 /* ────────────────────────────────────────────
-   Data — mirrored from PostitWall.tsx
+   Data
    ──────────────────────────────────────────── */
 
 interface PostitSkill {

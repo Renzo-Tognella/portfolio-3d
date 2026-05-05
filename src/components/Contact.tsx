@@ -1,6 +1,57 @@
 "use client";
 
+import { useState, type FormEvent } from "react";
+
+// ═══════════════════════════════════════════════════════════════
+// Free form backend — Web3Forms (https://web3forms.com)
+// 1. Create a free account at web3forms.com
+// 2. Replace the placeholder key below with your access key
+// 3. Verify your email to start receiving messages
+// ═══════════════════════════════════════════════════════════════
+const WEB3FORMS_KEY = "YOUR_ACCESS_KEY_HERE"; // ← replace me
+
 export function Contact() {
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [errorMsg, setErrorMsg] = useState("");
+
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+
+    // If no Web3Forms key configured, open mailto as fallback
+    if (WEB3FORMS_KEY === "YOUR_ACCESS_KEY_HERE") {
+      const name = formData.get("name") as string;
+      const email = formData.get("email") as string;
+      const message = formData.get("message") as string;
+      const subject = `Portfolio contact from ${name}`;
+      const body = `From: ${name} (${email})\n\n${message}`;
+      window.location.href = `mailto:renzo.tognella@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      return;
+    }
+
+    setStatus("sending");
+    setErrorMsg("");
+
+    try {
+      formData.append("access_key", WEB3FORMS_KEY);
+      const res = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.success) {
+        setStatus("sent");
+        form.reset();
+      } else {
+        throw new Error(data.message || "Submission failed");
+      }
+    } catch (err) {
+      setStatus("error");
+      setErrorMsg(err instanceof Error ? err.message : "Erro ao enviar. Tente novamente.");
+    }
+  }
+
   return (
     <section id="contact" className="relative w-full py-28 md:py-36">
       <div className="relative z-10 mx-auto max-w-7xl px-6 md:px-10">
@@ -66,7 +117,7 @@ export function Contact() {
                 GitHub
               </a>
               <a
-                href="https://linkedin.com/in/renzo"
+                href="https://linkedin.com/in/renzotognella"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 rounded-full border border-border bg-white/[0.02] px-6 py-3 text-sm font-medium text-foreground transition-all duration-300 hover:border-accent/50 hover:text-accent hover:bg-accent/5"
@@ -89,49 +140,77 @@ export function Contact() {
                 boxShadow: "0 0 0 1px rgba(255,255,255,0.03), 0 24px 48px -16px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05)",
               }}
             >
-              <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
-                <div className="grid gap-6 sm:grid-cols-2">
-                  <div>
-                    <label htmlFor="name" className="mb-2 block text-sm font-medium text-foreground/80">
-                      Nome
-                    </label>
-                    <input
-                      id="name"
-                      type="text"
-                      className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-foreground placeholder:text-muted/40 focus:border-accent/50 focus:outline-none focus:ring-1 focus:ring-accent/20 transition-colors"
-                      placeholder="Seu nome"
-                    />
+              {status === "sent" ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-500/10">
+                    <svg className="h-8 w-8 text-green-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-semibold text-foreground">Mensagem enviada!</h3>
+                  <p className="mt-2 text-muted">Obrigado pelo contato. Respondo em até 48h.</p>
+                  <button
+                    onClick={() => setStatus("idle")}
+                    className="mt-6 text-sm text-accent hover:text-accent-secondary transition-colors"
+                  >
+                    Enviar outra mensagem
+                  </button>
+                </div>
+              ) : (
+                <form className="space-y-6" onSubmit={handleSubmit}>
+                  <div className="grid gap-6 sm:grid-cols-2">
+                    <div>
+                      <label htmlFor="name" className="mb-2 block text-sm font-medium text-foreground/80">
+                        Nome
+                      </label>
+                      <input
+                        id="name"
+                        name="name"
+                        type="text"
+                        required
+                        className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-foreground placeholder:text-muted/40 focus:border-accent/50 focus:outline-none focus:ring-1 focus:ring-accent/20 transition-colors"
+                        placeholder="Seu nome"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="email" className="mb-2 block text-sm font-medium text-foreground/80">
+                        Email
+                      </label>
+                      <input
+                        id="email"
+                        name="email"
+                        type="email"
+                        required
+                        className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-foreground placeholder:text-muted/40 focus:border-accent/50 focus:outline-none focus:ring-1 focus:ring-accent/20 transition-colors"
+                        placeholder="seu@email.com"
+                      />
+                    </div>
                   </div>
                   <div>
-                    <label htmlFor="email" className="mb-2 block text-sm font-medium text-foreground/80">
-                      Email
+                    <label htmlFor="message" className="mb-2 block text-sm font-medium text-foreground/80">
+                      Mensagem
                     </label>
-                    <input
-                      id="email"
-                      type="email"
-                      className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-foreground placeholder:text-muted/40 focus:border-accent/50 focus:outline-none focus:ring-1 focus:ring-accent/20 transition-colors"
-                      placeholder="seu@email.com"
+                    <textarea
+                      id="message"
+                      name="message"
+                      rows={5}
+                      required
+                      className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-foreground placeholder:text-muted/40 focus:border-accent/50 focus:outline-none focus:ring-1 focus:ring-accent/20 transition-colors resize-none"
+                      placeholder="Sua mensagem..."
                     />
                   </div>
-                </div>
-                <div>
-                  <label htmlFor="message" className="mb-2 block text-sm font-medium text-foreground/80">
-                    Mensagem
-                  </label>
-                  <textarea
-                    id="message"
-                    rows={5}
-                    className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-foreground placeholder:text-muted/40 focus:border-accent/50 focus:outline-none focus:ring-1 focus:ring-accent/20 transition-colors resize-none"
-                    placeholder="Sua mensagem..."
-                  />
-                </div>
-                <button
-                  type="submit"
-                  className="w-full rounded-xl bg-accent px-6 py-3.5 text-sm font-semibold text-white transition-all duration-300 hover:bg-accent/90 hover:shadow-lg hover:shadow-accent/25"
-                >
-                  Enviar mensagem
-                </button>
-              </form>
+                  {status === "error" && (
+                    <p className="text-sm text-red-400">{errorMsg}</p>
+                  )}
+                  <button
+                    type="submit"
+                    disabled={status === "sending"}
+                    className="w-full rounded-xl bg-accent px-6 py-3.5 text-sm font-semibold text-white transition-all duration-300 hover:bg-accent/90 hover:shadow-lg hover:shadow-accent/25 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {status === "sending" ? "Enviando..." : "Enviar mensagem"}
+                  </button>
+                </form>
+              )}
             </div>
           </div>
         </div>

@@ -1,49 +1,63 @@
-# portfolio-3d 🚀
+# Renzo — Portfolio 3D
 
-> **3D WebGL Developer Portfolio** — Interactive connected workspace built with Next.js + Three.js.
+Portfolio pessoal com cena 3D interativa construída com **Next.js**, **React Three Fiber** e **GSAP**.
 
-[![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org)
-[![Three.js](https://img.shields.io/badge/Three.js-r174-black?logo=three.js)](https://threejs.org)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)](https://typescriptlang.org)
-[![GitHub Pages](https://img.shields.io/badge/deploy-GitHub_Pages-222?logo=github)](https://renzo-tognella.github.io/portfolio-3d)
+## ✨ Features
 
-## 🔗 [Live Demo →](https://renzo-tognella.github.io/portfolio-3d)
+- **Cena 3D interativa** — Mesa de escritório com monitor, teclado, livros clicáveis, gavetas de projetos, objetos decorativos
+- **"Dive Into Screen"** — Câmera scroll-driven que mergulha da visão isométrica até o monitor
+- **Monitor com conteúdo dinâmico** — Slides de About → Skills → Projects renderizados via Canvas 2D
+- **Device tier detection** — Qualidade gráfica adaptativa (high/medium/low) baseada na GPU
+- **Dark theme premium** — Paleta `#0a0a0f` com glassmorphism, indigo accent, animações cinematográficas
+- **Seções completas** — About, Experiência, Skills, Contato
+- **Static export** — Deploy no GitHub Pages
 
-> *[Screenshot coming soon — take one with the browser devtools and drop it in `docs/screenshot.png`]*
+## 🛠 Stack
 
-![Portfolio Screenshot](./docs/screenshot.png)
+| Camada | Tecnologia |
+|--------|-----------|
+| Framework | Next.js 16 (static export) |
+| 3D | React Three Fiber + Three.js 0.184 |
+| UI | Tailwind CSS 4 |
+| Animação | GSAP + ScrollTrigger |
+| Tipagem | TypeScript 5.9 |
 
-## Why This Exists
-
-Developer portfolios shouldn't be boring. This is an interactive 3D workspace where visitors can explore my projects, skills, and experience in a connected spatial environment — built with WebGL, Next.js, and TypeScript.
-
-## Tech Stack
-
-- **Next.js 16** — App Router, static export
-- **Three.js** — 3D rendering, post-processing, shaders
-- **TypeScript** — Type-safe throughout
-- **GitHub Actions** — CI/CD to GitHub Pages
-- **Responsive** — Works on desktop and mobile
-
-## Getting Started
+## 🚀 Rodando localmente
 
 ```bash
 npm install
 npm run dev
-# Open http://localhost:3000
+# → http://localhost:3000
 ```
 
-## Build & Export
+Build de produção:
 
 ```bash
 npm run build
-# Static files output to /out
+# output estático em out/
 ```
 
-## Deployment
+## 📁 Estrutura
 
-Auto-deployed to GitHub Pages via GitHub Actions on push to `master`.
+```
+src/
+├── app/           # Next.js App Router
+├── components/    # React + R3F components
+│   ├── Scene3D.tsx    # Cena 3D principal (mesa, monitor, objetos)
+│   ├── Hero.tsx       # GSAP ScrollTrigger + Dive Camera
+│   ├── About.tsx      # Terminal bio, stats, timeline
+│   ├── Experiencia.tsx # Projetos com scroll-reveal
+│   ├── Skills.tsx     # Glass cards com skill bars
+│   └── Contact.tsx    # Formulário funcional
+├── hooks/         # useCanvasTexture, etc.
+└── data/          # Dados compartilhados (skills, projetos, perfil)
+```
+
+## 🔧 Deploy
+
+Configurado para GitHub Pages via GitHub Actions (`.github/workflows/deploy-pages.yml`).
+Base path: `/portfolio-3d` (ajuste em `next.config.ts` se usar domínio próprio).
 
 ---
 
-Built by [Renzo Tognella](https://github.com/Renzo-Tognella) • [Live Site](https://renzo-tognella.github.io/portfolio-3d)
+Feito com ☕ em Curitiba.

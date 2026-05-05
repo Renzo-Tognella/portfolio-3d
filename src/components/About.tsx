@@ -1,46 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-
-// ---------------------------------------------------------------------------
-// Data
-// ---------------------------------------------------------------------------
-const STATS = [
-  { value: 3, suffix: "+", label: "anos de experiência" },
-  { value: 50, suffix: "+", label: "propostas/dia (Modulus)" },
-  { value: 1, suffix: "", label: "publicação IEEE" },
-  { value: 3, suffix: "", label: "meses como lead interino" },
-];
-
-const TIMELINE = [
-  {
-    year: "2024",
-    title: "Backend Engineer @ Tradener",
-    description:
-      "Faturamento, gestão de risco, APIs PLD. Lead interino por 3 meses.",
-    tags: ["Rails", "PostgreSQL", "Redis", "Docker"],
-  },
-  {
-    year: "2023",
-    title: "Coautor — IEEE LARS/SBR",
-    description:
-      "Estimação de centro 3D com Kinect RGB-D. C++ e Python.",
-    tags: ["C++", "Python", "Computer Vision"],
-  },
-  {
-    year: "2023",
-    title: "Freelance — Modulus Engenharia",
-    description:
-      "SaaS com pipeline LLM, ~50 propostas/dia, analytics.",
-    tags: ["Rails", "Python", "LLMs", "PostgreSQL"],
-  },
-  {
-    year: "2022",
-    title: "UTFPR — Sistemas de Informação",
-    description: "Início da graduação. Previsão conclusão: Jul/2027.",
-    tags: [],
-  },
-];
+import { STATS, TIMELINE, PROFILE } from "@/data/profile";
+import type { TimelineEntry } from "@/data/profile";
 
 const TERMINAL_LINES = [
   { type: "prompt", text: 'cat about.md' },

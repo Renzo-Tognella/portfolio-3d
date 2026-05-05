@@ -287,8 +287,8 @@ export function Hero() {
   if (!mounted) return <HeroSkeleton />;
   if (tier === "none") return <StaticHero />;
 
-  // When canvas should be hidden (past the snap point)
-  const canvasHidden = scrollProgress > 0.91;
+  // When canvas is fully faded, disable pointer events so user can interact with About
+  const canvasFaded = scrollProgress > 0.92;
 
   // -----------------------------------------------------------------------
   // Render
@@ -301,17 +301,16 @@ export function Hero() {
     >
       {/* Scroll spacer — 200vh (reduced from 300vh for snappier feel) */}
       <div data-scroll-spacer className="relative h-[200vh]">
-        {/* Sticky canvas container */}
+        {/* Sticky canvas container — crossfade via GSAP opacity (82-92%), no hard cut */}
         <div
           ref={canvasWrapperRef}
-          className="sticky top-0 h-screen w-full"
+          className="sticky top-0 h-screen w-full transition-opacity"
           style={{
             opacity: 1,
-            // Hard snap: completely remove from flow when past transition
-            display: canvasHidden ? "none" : "block",
+            pointerEvents: canvasFaded ? "none" : "auto",
           }}
         >
-          <SceneErrorBoundary fallback={null}>
+          <SceneErrorBoundary fallback={<StaticHero />}>
             <Scene3D tier={tier} scrollProgress={scrollProgress} />
           </SceneErrorBoundary>
 

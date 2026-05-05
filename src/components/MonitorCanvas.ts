@@ -3,7 +3,7 @@
 import { useStaticCanvasTexture } from "@/hooks/useCanvasTexture";
 
 /* ────────────────────────────────────────────
-   Types & Data — mirrored from MonitorContent.tsx
+   Types & Data
    ──────────────────────────────────────────── */
 
 interface Skill {
