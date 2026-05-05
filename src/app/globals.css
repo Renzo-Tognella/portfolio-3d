@@ -496,6 +496,13 @@
   }
 }
 
+/* ── IDE code glow (About section) ── */
+.code-glow {
+  color: var(--accent);
+  font-weight: 600;
+  text-shadow: 0 0 14px rgba(99, 102, 241, 0.5), 0 0 4px rgba(99, 102, 241, 0.3);
+}
+
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--accent) var(--surface);
