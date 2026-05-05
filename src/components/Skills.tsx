@@ -1,300 +1,264 @@
 "use client";
 
-import {
-  useEffect,
-  useRef,
-  useCallback,
-  useState,
-  type ReactElement,
-} from "react";
-import { SKILL_CATEGORIES } from "@/data/skills";
-import type { Skill, SkillCategory } from "@/data/skills";
+import { useEffect, useRef, useState, useMemo } from "react";
 
-const ACCENT_META: Record<
-  SkillCategory["accent"],
+// ═══════════════════════════════════════════════════════════════
+// Skill Tree Data
+// ═══════════════════════════════════════════════════════════════
+
+interface SkillNode {
+  name: string;
+  level?: number;
+  color: string;
+  children?: SkillNode[];
+}
+
+const TREE: SkillNode[] = [
   {
-    text: string;
-    textStrong: string;
-    bgSoft: string;
-    bgGlow: string;
-    borderGlow: string;
-    barGradient: string;
-    barGlow: string;
-    iconBg: string;
-    stroke: string;
-  }
-> = {
-  indigo: {
-    text: "text-indigo-300",
-    textStrong: "text-indigo-400",
-    bgSoft: "bg-indigo-500/[0.06]",
-    bgGlow: "rgba(99,102,241,0.12)",
-    borderGlow: "rgba(99,102,241,0.25)",
-    barGradient: "linear-gradient(90deg, #6366f1 0%, #818cf8 60%, #a5b4fc 100%)",
-    barGlow: "0 0 12px rgba(99,102,241,0.45), 0 0 4px rgba(99,102,241,0.3)",
-    iconBg: "bg-indigo-500/10",
-    stroke: "#818cf8",
+    name: "Backend",
+    color: "#6366f1",
+    children: [
+      { name: "Ruby on Rails", level: 95, color: "#818cf8" },
+      { name: "Python", level: 85, color: "#818cf8" },
+      { name: "Java / Spring", level: 70, color: "#818cf8" },
+      { name: "REST / GraphQL", level: 90, color: "#a5b4fc" },
+      { name: "RSpec / TDD", level: 85, color: "#a5b4fc" },
+    ],
   },
-  violet: {
-    text: "text-violet-300",
-    textStrong: "text-violet-400",
-    bgSoft: "bg-violet-500/[0.06]",
-    bgGlow: "rgba(139,92,246,0.12)",
-    borderGlow: "rgba(139,92,246,0.25)",
-    barGradient: "linear-gradient(90deg, #8b5cf6 0%, #a78bfa 60%, #c4b5fd 100%)",
-    barGlow: "0 0 12px rgba(139,92,246,0.45), 0 0 4px rgba(139,92,246,0.3)",
-    iconBg: "bg-violet-500/10",
-    stroke: "#a78bfa",
+  {
+    name: "Frontend",
+    color: "#8b5cf6",
+    children: [
+      { name: "React / Next.js", level: 88, color: "#a78bfa" },
+      { name: "TypeScript", level: 90, color: "#a78bfa" },
+      { name: "Tailwind CSS", level: 85, color: "#c4b5fd" },
+      { name: "Three.js / R3F", level: 75, color: "#c4b5fd" },
+    ],
   },
-  cyan: {
-    text: "text-cyan-300",
-    textStrong: "text-cyan-400",
-    bgSoft: "bg-cyan-500/[0.06]",
-    bgGlow: "rgba(6,182,212,0.12)",
-    borderGlow: "rgba(6,182,212,0.25)",
-    barGradient: "linear-gradient(90deg, #06b6d4 0%, #22d3ee 60%, #67e8f9 100%)",
-    barGlow: "0 0 12px rgba(6,182,212,0.45), 0 0 4px rgba(6,182,212,0.3)",
-    iconBg: "bg-cyan-500/10",
-    stroke: "#22d3ee",
+  {
+    name: "Dados & Infra",
+    color: "#06b6d4",
+    children: [
+      { name: "PostgreSQL", level: 90, color: "#22d3ee" },
+      { name: "Redis", level: 80, color: "#22d3ee" },
+      { name: "Docker", level: 85, color: "#67e8f9" },
+      { name: "AWS", level: 75, color: "#67e8f9" },
+      { name: "MongoDB", level: 65, color: "#67e8f9" },
+    ],
   },
-  amber: {
-    text: "text-amber-300",
-    textStrong: "text-amber-400",
-    bgSoft: "bg-amber-500/[0.06]",
-    bgGlow: "rgba(245,158,11,0.12)",
-    borderGlow: "rgba(245,158,11,0.25)",
-    barGradient: "linear-gradient(90deg, #f59e0b 0%, #fbbf24 60%, #fcd34d 100%)",
-    barGlow: "0 0 12px rgba(245,158,11,0.45), 0 0 4px rgba(245,158,11,0.3)",
-    iconBg: "bg-amber-500/10",
-    stroke: "#fbbf24",
+  {
+    name: "Qualidade & IA",
+    color: "#f43f5e",
+    children: [
+      { name: "Clean Architecture", level: 90, color: "#fb7185" },
+      { name: "SOLID / Patterns", level: 85, color: "#fb7185" },
+      { name: "LLMs / MCP", level: 80, color: "#fda4af" },
+      { name: "Git / CI/CD", level: 90, color: "#fda4af" },
+      { name: "C++ / CV", level: 70, color: "#fda4af" },
+    ],
   },
-  rose: {
-    text: "text-rose-300",
-    textStrong: "text-rose-400",
-    bgSoft: "bg-rose-500/[0.06]",
-    bgGlow: "rgba(244,63,94,0.12)",
-    borderGlow: "rgba(244,63,94,0.25)",
-    barGradient: "linear-gradient(90deg, #f43f5e 0%, #fb7185 60%, #fda4af 100%)",
-    barGlow: "0 0 12px rgba(244,63,94,0.45), 0 0 4px rgba(244,63,94,0.3)",
-    iconBg: "bg-rose-500/10",
-    stroke: "#fb7185",
-  },
-};
+];
 
-/* ────────────────────────────────────────────
-   Icons
-   ──────────────────────────────────────────── */
+// ═══════════════════════════════════════════════════════════════
+// Tree Node Component
+// ═══════════════════════════════════════════════════════════════
 
-function BackendIcon({ stroke }: { stroke: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6" style={{ color: stroke }}>
-      <rect x="2" y="3" width="20" height="8" rx="2" />
-      <rect x="2" y="13" width="20" height="8" rx="2" />
-      <circle cx="6" cy="7" r="1" fill="currentColor" />
-      <circle cx="6" cy="17" r="1" fill="currentColor" />
-    </svg>
-  );
-}
-
-function DatabaseIcon({ stroke }: { stroke: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6" style={{ color: stroke }}>
-      <ellipse cx="12" cy="5" rx="9" ry="3" />
-      <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
-      <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
-    </svg>
-  );
-}
-
-function QualityIcon({ stroke }: { stroke: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6" style={{ color: stroke }}>
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-      <path d="m9 12 2 2 4-4" />
-    </svg>
-  );
-}
-
-function FrontendIcon({ stroke }: { stroke: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6" style={{ color: stroke }}>
-      <rect x="2" y="3" width="20" height="14" rx="2" />
-      <path d="M8 21h8" />
-      <path d="M12 17v4" />
-      <path d="m7 8 3 3-3 3" />
-      <path d="m13 8 3 3-3 3" />
-    </svg>
-  );
-}
-
-const CATEGORY_ICONS: Record<string, (props: { stroke: string }) => ReactElement> = {
-  Backend: BackendIcon,
-  Frontend: FrontendIcon,
-  "Dados & Infra": DatabaseIcon,
-  "Qualidade & IA": QualityIcon,
-};
-
-/* ────────────────────────────────────────────
-   SkillBar — premium gradient glow bar
-   ──────────────────────────────────────────── */
-
-function SkillBar({
-  skill,
-  meta,
-  index,
+function TreeNode({
+  node,
+  x,
+  y,
+  parentX,
+  parentY,
+  depth,
   visible,
+  index,
 }: {
-  skill: Skill;
-  meta: (typeof ACCENT_META)[keyof typeof ACCENT_META];
-  index: number;
+  node: SkillNode;
+  x: number;
+  y: number;
+  parentX: number | null;
+  parentY: number | null;
+  depth: number;
   visible: boolean;
+  index: number;
 }) {
-  const [hovered, setHovered] = useState(false);
+  const isLeaf = !node.children;
+  const nodeR = isLeaf ? 4 : 7;
+  const delay = depth * 300 + index * 100;
 
   return (
-    <div
-      className="skill-bar-row group/skill"
-      style={{ "--stagger": `${index * 100}ms` } as React.CSSProperties}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      <div className="mb-2 flex items-center justify-between">
-        <span className="text-sm font-medium text-foreground/80 transition-colors group-hover/skill:text-foreground">
-          {skill.name}
-        </span>
-        <span
-          className={`font-mono text-xs font-semibold tabular-nums transition-colors ${meta.textStrong}`}
-          style={{ textShadow: hovered ? `0 0 8px ${meta.bgGlow}` : "none" }}
-        >
-          {skill.level}%
-        </span>
-      </div>
-
-      {/* Track */}
-      <div className="skill-bar-track relative h-2.5 w-full overflow-hidden rounded-full bg-white/[0.04] ring-1 ring-white/[0.06]">
-        {/* Fill */}
-        <div
-          className="skill-bar-fill absolute inset-y-0 left-0 rounded-full"
+    <g style={{ opacity: visible ? 1 : 0, transition: `opacity 0.5s ease ${delay}ms` }}>
+      {/* Connection line from parent */}
+      {parentX !== null && parentY !== null && (
+        <line
+          x1={parentX}
+          y1={parentY}
+          x2={x}
+          y2={y}
+          stroke={node.color}
+          strokeWidth={isLeaf ? 0.8 : 1.5}
+          strokeOpacity={0.3}
+          strokeDasharray={visible ? "1000" : "1000"}
+          strokeDashoffset={visible ? "0" : "1000"}
           style={{
-            width: visible ? `${skill.level}%` : "0%",
-            background: meta.barGradient,
-            boxShadow: visible ? meta.barGlow : "none",
-            transitionDelay: visible ? `${index * 100 + 300}ms` : "0ms",
-          }}
-        />
-        {/* Shimmer shine */}
-        <div
-          className="skill-bar-shimmer absolute inset-y-0 w-1/3 rounded-full opacity-0"
-          style={{
-            background:
-              "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.15) 50%, transparent 100%)",
-            left: visible ? `${skill.level - 35}%` : "-35%",
             transition: visible
-              ? `left 1200ms cubic-bezier(0.215, 0.61, 0.355, 1) ${index * 100 + 500}ms, opacity 400ms ease ${index * 100 + 500}ms`
+              ? `stroke-dashoffset 1.2s ease ${delay + 200}ms`
               : "none",
-            opacity: visible ? 1 : 0,
           }}
         />
-      </div>
-    </div>
-  );
-}
+      )}
 
-/* ────────────────────────────────────────────
-   SkillCard — large glassmorphic card
-   ──────────────────────────────────────────── */
-
-function SkillCard({
-  cat,
-  index,
-  visible,
-  setRef,
-}: {
-  cat: SkillCategory;
-  index: number;
-  visible: boolean;
-  setRef: (el: HTMLDivElement | null) => void;
-}) {
-  const meta = ACCENT_META[cat.accent];
-  const Icon = CATEGORY_ICONS[cat.name];
-
-  return (
-    <div
-      ref={setRef}
-      className={`skill-card-premium group relative flex flex-col overflow-hidden rounded-3xl border backdrop-blur-2xl transition-all duration-700 ${
-        visible ? "is-visible" : ""
-      }`}
-      style={{
-        "--stagger": `${index * 180}ms`,
-        background:
-          "linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)",
-        borderColor: meta.borderGlow,
-        boxShadow: `0 0 0 1px rgba(255,255,255,0.03), 0 24px 48px -16px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05)`,
-      } as React.CSSProperties}
-    >
-      {/* Top accent glow line */}
-      <div
-        className="absolute inset-x-0 top-0 h-px"
+      {/* Node circle */}
+      <circle
+        cx={x}
+        cy={y}
+        r={nodeR}
+        fill={isLeaf ? node.color : "transparent"}
+        stroke={node.color}
+        strokeWidth={isLeaf ? 1.5 : 2}
         style={{
-          background: `linear-gradient(90deg, transparent 0%, ${meta.stroke} 50%, transparent 100%)`,
-          opacity: 0.6,
+          filter: `drop-shadow(0 0 ${isLeaf ? 4 : 8}px ${node.color}80)`,
+          transition: `r 0.5s ease ${delay}ms`,
         }}
       />
 
-      {/* Background radial glow */}
-      <div
-        className="pointer-events-none absolute -top-20 -right-20 h-40 w-40 rounded-full opacity-20 blur-3xl transition-opacity duration-700 group-hover:opacity-40"
-        style={{ background: meta.stroke }}
-      />
+      {/* Node glow ring (branches only) */}
+      {!isLeaf && (
+        <circle
+          cx={x}
+          cy={y}
+          r={14}
+          fill="none"
+          stroke={node.color}
+          strokeWidth={0.5}
+          strokeOpacity={0.15}
+          className="animate-pulse"
+          style={{ animationDelay: `${delay}ms` }}
+        />
+      )}
 
-      <div className="relative z-10 flex flex-1 flex-col p-8 md:p-10">
-        {/* Header */}
-        <div className="skill-card-header mb-8 flex items-center gap-4">
-          <div
-            className={`flex h-12 w-12 items-center justify-center rounded-2xl ${meta.iconBg} ring-1 ring-white/10 transition-all duration-500 group-hover:scale-110 group-hover:ring-white/20`}
-          >
-            {Icon && <Icon stroke={meta.stroke} />}
-          </div>
-          <div>
-            <h3 className="text-base font-bold uppercase tracking-widest text-foreground">
-              {cat.name}
-            </h3>
-            <p className={`mt-0.5 text-xs font-medium ${meta.text}`}>
-              {cat.skills.length} tecnologias
-            </p>
-          </div>
-        </div>
+      {/* Label */}
+      <text
+        x={x + (isLeaf ? 10 : 0)}
+        y={y + (isLeaf ? 4 : -12)}
+        fill={isLeaf ? "#94a3b8" : node.color}
+        fontSize={isLeaf ? 11 : 13}
+        fontFamily="var(--font-mono), monospace"
+        fontWeight={isLeaf ? 400 : 700}
+        textAnchor={isLeaf ? "start" : "middle"}
+        style={{
+          transition: `opacity 0.3s ease ${delay + 100}ms`,
+        }}
+      >
+        {node.name}
+      </text>
 
-        {/* Skills */}
-        <div className="flex flex-1 flex-col justify-center gap-4">
-          {cat.skills.map((skill, skillIdx) => (
-            <SkillBar
-              key={skill.name}
-              skill={skill}
-              meta={meta}
-              index={skillIdx}
-              visible={visible}
-            />
-          ))}
-        </div>
-      </div>
-    </div>
+      {/* Level badge (leaves only) */}
+      {node.level !== undefined && (
+        <text
+          x={x + 10}
+          y={y + 18}
+          fill={node.color}
+          fontSize={9}
+          fontFamily="var(--font-mono), monospace"
+          textAnchor="start"
+          opacity={0.7}
+        >
+          {node.level}%
+        </text>
+      )}
+    </g>
   );
 }
 
-/* ───────────────────────────────────────────────────────────
-   Main Skills component
-   ─────────────────────────────────────────────────────────── */
+// ═══════════════════════════════════════════════════════════════
+// Tree Layout Calculator
+// ═══════════════════════════════════════════════════════════════
+
+interface LayoutNode {
+  node: SkillNode;
+  x: number;
+  y: number;
+  parentX: number | null;
+  parentY: number | null;
+  depth: number;
+  index: number;
+}
+
+function computeLayout(
+  branches: SkillNode[],
+  width: number,
+  height: number
+): LayoutNode[] {
+  const result: LayoutNode[] = [];
+  const rootX = width / 2;
+  const rootY = 50;
+
+  const branchCount = branches.length;
+  const branchSpacing = width / (branchCount + 1);
+  const branchY = rootY + 120;
+
+  // Root
+  result.push({
+    node: { name: "Tech Stack", color: "#6366f1", children: branches },
+    x: rootX,
+    y: rootY,
+    parentX: null,
+    parentY: null,
+    depth: 0,
+    index: 0,
+  });
+
+  // Branches
+  branches.forEach((branch, bi) => {
+    const bx = branchSpacing * (bi + 1);
+    const by = branchY;
+
+    result.push({
+      node: branch,
+      x: bx,
+      y: by,
+      parentX: rootX,
+      parentY: rootY + 12,
+      depth: 1,
+      index: bi,
+    });
+
+    // Leaves
+    const leafCount = branch.children?.length ?? 0;
+    const leafStartY = by + 80;
+    const leafSpacingY = 42;
+    const leafX = bx;
+
+    branch.children?.forEach((leaf, li) => {
+      result.push({
+        node: leaf,
+        x: leafX,
+        y: leafStartY + li * leafSpacingY,
+        parentX: bx,
+        parentY: by + 10,
+        depth: 2,
+        index: li,
+      });
+    });
+  });
+
+  return result;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Main SkillTree Component
+// ═══════════════════════════════════════════════════════════════
 
 export function Skills() {
   const sectionRef = useRef<HTMLElement>(null);
-  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [visible, setVisible] = useState(false);
+  const [dims, setDims] = useState({ w: 900, h: 600 });
 
-  /* Intersection Observer */
   useEffect(() => {
     const el = sectionRef.current;
     if (!el) return;
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -302,28 +266,44 @@ export function Skills() {
           observer.disconnect();
         }
       },
-      { threshold: 0.1 },
+      { threshold: 0.15 }
     );
     observer.observe(el);
-    return () => observer.disconnect();
+
+    // Responsive sizing
+    const updateSize = () => {
+      if (el) {
+        const rect = el.getBoundingClientRect();
+        setDims({ w: Math.max(600, rect.width - 48), h: Math.max(400, rect.width * 0.6) });
+      }
+    };
+    updateSize();
+    window.addEventListener("resize", updateSize);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", updateSize);
+    };
   }, []);
 
-  const setCardRef = useCallback(
-    (index: number) => (el: HTMLDivElement | null) => {
-      cardRefs.current[index] = el;
-    },
-    [],
+  const layout = useMemo(
+    () => computeLayout(TREE, dims.w, dims.h),
+    [dims]
   );
+
+  // Separate root, branches, and leaves for staggered reveal
+  const rootNodes = layout.filter((n) => n.depth === 0);
+  const branchNodes = layout.filter((n) => n.depth === 1);
+  const leafNodes = layout.filter((n) => n.depth === 2);
 
   return (
     <section
       ref={sectionRef}
       id="skills"
-      className="relative w-full py-28 md:py-36"
+      className="relative w-full py-24 md:py-32 overflow-hidden"
     >
       <div className="relative z-10 mx-auto max-w-7xl px-6 md:px-10">
         {/* Heading */}
-        <div className="mb-20 text-center">
+        <div className="mb-16 text-center">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/5 bg-white/[0.02] px-4 py-1.5 backdrop-blur-sm">
             <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
             <span className="font-mono text-xs uppercase tracking-widest text-muted">
@@ -331,7 +311,7 @@ export function Skills() {
             </span>
           </div>
 
-          <h2 className="mb-5 text-4xl font-bold tracking-tight text-foreground md:text-5xl lg:text-6xl">
+          <h2 className="mb-4 text-4xl font-bold tracking-tight text-foreground md:text-5xl lg:text-6xl">
             Stack{" "}
             <span
               className="bg-gradient-to-r from-accent to-accent-secondary bg-clip-text text-transparent"
@@ -355,16 +335,87 @@ export function Skills() {
           </div>
         </div>
 
-        {/* Grid — 4 columns on xl, 2 on md, 1 on mobile */}
-        <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
-          {SKILL_CATEGORIES.map((cat, catIdx) => (
-            <SkillCard
-              key={cat.name}
-              cat={cat}
-              index={catIdx}
-              visible={visible}
-              setRef={setCardRef(catIdx)}
-            />
+        {/* SVG Tree */}
+        <div
+          className="relative mx-auto w-full rounded-3xl border overflow-hidden"
+          style={{
+            borderColor: "rgba(255,255,255,0.05)",
+            background:
+              "linear-gradient(180deg, rgba(255,255,255,0.015) 0%, rgba(255,255,255,0.005) 100%)",
+            boxShadow:
+              "0 0 0 1px rgba(255,255,255,0.02), 0 24px 48px -16px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.03)",
+          }}
+        >
+          {/* Subtle grid overlay */}
+          <div
+            className="absolute inset-0 opacity-[0.03] pointer-events-none"
+            style={{
+              backgroundImage:
+                "radial-gradient(circle, rgba(99,102,241,0.3) 1px, transparent 1px)",
+              backgroundSize: "30px 30px",
+            }}
+          />
+
+          <svg
+            viewBox={`0 0 ${dims.w} ${dims.h}`}
+            className="w-full"
+            style={{ minHeight: dims.h }}
+            preserveAspectRatio="xMidYMid meet"
+          >
+            {/* Background gradient blobs */}
+            <defs>
+              <radialGradient id="glow-indigo" cx="25%" cy="30%" r="40%">
+                <stop offset="0%" stopColor="#6366f1" stopOpacity="0.04" />
+                <stop offset="100%" stopColor="#6366f1" stopOpacity="0" />
+              </radialGradient>
+              <radialGradient id="glow-violet" cx="50%" cy="40%" r="35%">
+                <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.03" />
+                <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0" />
+              </radialGradient>
+              <radialGradient id="glow-cyan" cx="75%" cy="35%" r="35%">
+                <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.04" />
+                <stop offset="100%" stopColor="#06b6d4" stopOpacity="0" />
+              </radialGradient>
+              <radialGradient id="glow-rose" cx="85%" cy="30%" r="35%">
+                <stop offset="0%" stopColor="#f43f5e" stopOpacity="0.03" />
+                <stop offset="100%" stopColor="#f43f5e" stopOpacity="0" />
+              </radialGradient>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#glow-indigo)" />
+            <rect width="100%" height="100%" fill="url(#glow-violet)" />
+            <rect width="100%" height="100%" fill="url(#glow-cyan)" />
+            <rect width="100%" height="100%" fill="url(#glow-rose)" />
+
+            {/* Root node */}
+            {rootNodes.map((n, i) => (
+              <TreeNode key={n.node.name} {...n} visible={visible} index={i} />
+            ))}
+
+            {/* Branch nodes */}
+            {branchNodes.map((n, i) => (
+              <TreeNode key={n.node.name} {...n} visible={visible} index={i} />
+            ))}
+
+            {/* Leaf nodes */}
+            {leafNodes.map((n, i) => (
+              <TreeNode key={n.node.name} {...n} visible={visible} index={i} />
+            ))}
+          </svg>
+        </div>
+
+        {/* Category legend */}
+        <div className="mt-10 flex flex-wrap items-center justify-center gap-6">
+          {TREE.map((cat) => (
+            <div key={cat.name} className="flex items-center gap-2">
+              <span
+                className="inline-block h-2.5 w-2.5 rounded-full"
+                style={{
+                  backgroundColor: cat.color,
+                  boxShadow: `0 0 8px ${cat.color}60`,
+                }}
+              />
+              <span className="font-mono text-xs text-muted">{cat.name}</span>
+            </div>
           ))}
         </div>
       </div>
