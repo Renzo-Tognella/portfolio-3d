@@ -6,6 +6,7 @@ import { Skills } from "@/components/Skills";
 import { Contact } from "@/components/Contact";
 import { Footer } from "@/components/Footer";
 import { GlobalBackground } from "@/components/GlobalBackground";
+import { ChatBot } from "@/components/ChatBot";
 
 export default function Home() {
   return (
@@ -20,6 +21,7 @@ export default function Home() {
         <Contact />
       </main>
       <Footer />
+      <ChatBot />
     </>
   );
 }
