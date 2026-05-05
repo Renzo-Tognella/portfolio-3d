@@ -130,40 +130,112 @@ const FILE_ICONS: Record<string, string> = {
 };
 
 // ═══════════════════════════════════════════════════════════════
-// Syntax highlighter — Python + Markdown
+// Token-based syntax highlighter — renders real React elements
 // ═══════════════════════════════════════════════════════════════
 
-function highlightLine(line: string, language: string) {
+interface Token {
+  text: string;
+  className: string;
+}
+
+function tokenize(line: string, language: string): Token[] {
   if (language === "python") {
-    // Strings with glow class (defined in globals.css via @apply or inline)
-    return line
-      // Keywords
-      .replace(/\b(import|from|class|def|if|for|in|return|as|elif|else|and|or|not|True|False|None)\b/g,
-        '<span class="text-violet-400/50">$1</span>')
-      // Decorators
-      .replace(/^(@\w+)/, '<span class="text-amber-400/60">$1</span>')
-      // Docstrings
-      .replace(/^(\s*"""[\s\S]*?""")/g, '<span class="text-muted/40 italic">$1</span>')
-      // f-strings and regular strings — GLOW via a real CSS class
-      .replace(/(f?"(?:\\.|[^"\\])*")/g, '<span class="code-glow">$1</span>')
-      .replace(/(f?'(?:\\.|[^'\\])*')/g, '<span class="code-glow">$1</span>')
-      // print function name
-      .replace(/\b(print)\b/g, '<span class="text-cyan-400/60">$1</span>')
-      // Numbers
-      .replace(/\b(\d+)\b/g, '<span class="text-rose-400/70">$1</span>')
-      // Comments
-      .replace(/(#.*$)/g, '<span class="text-muted/30 italic">$1</span>')
-      // Braces/operators
-      .replace(/([{}[\]():,=+\-*/])/g, '<span class="text-muted/25">$1</span>');
+    return tokenizePython(line);
   }
   if (language === "markdown") {
-    return line
-      .replace(/^(#{1,6}\s.+)$/, '<span class="text-indigo-400 font-bold">$1</span>')
-      .replace(/(\[.*?\])\(.*?\)/g, '<span class="code-glow">$1</span>')
-      .replace(/`([^`]+)`/g, '<span class="text-amber-400/70">`$1`</span>')
-      .replace(/^(\s*[-*]\s)/, '<span class="text-accent/50">$1</span>');
+    return tokenizeMarkdown(line);
   }
-  return line;
+  return [{ text: line || " ", className: "" }];
+}
+
+function tokenizePython(line: string): Token[] {
+  if (!line.trim()) return [{ text: " ", className: "" }];
+  const tokens: Token[] = [];
+  let remaining = line;
+
+  // Order matters — more specific first
+  const patterns: { regex: RegExp; className: string }[] = [
+    { regex: /^(@\w+)/, className: "text-amber-400/60" },                           // decorators
+    { regex: /^(f"(?:\\.|[^"\\])*")/, className: "code-glow" },                    // f-strings with glow
+    { regex: /^(f'(?:\\.|[^'\\])*')/, className: "code-glow" },                    // f-strings single-quote
+    { regex: /^("(?:\\.|[^"\\])*")/, className: "code-glow" },                     // regular strings with glow
+    { regex: /^('(?:\\.|[^'\\])*')/, className: "code-glow" },                     // single-quoted strings
+    { regex: /^("""[\s\S]*?""")/, className: "text-muted/40 italic" },             // docstrings
+    { regex: /^(#.*)/, className: "text-muted/30 italic" },                         // comments
+    { regex: /^\b(import|from|class|def|if|for|in|return|as|elif|else|and|or|not|True|False|None|print)\b/,
+      className: "text-violet-400/50" },                                             // keywords
+    { regex: /^\b(\d+)\b/, className: "text-rose-400/70" },                         // numbers
+    { regex: /^([{}[\]():,=+\-*/])/, className: "text-muted/25" },                  // operators
+    { regex: /^(\s+)/, className: "" },                                             // whitespace
+  ];
+
+  while (remaining.length > 0) {
+    let matched = false;
+    for (const { regex, className } of patterns) {
+      const match = remaining.match(regex);
+      if (match) {
+        tokens.push({ text: match[0], className });
+        remaining = remaining.slice(match[0].length);
+        matched = true;
+        break;
+      }
+    }
+    if (!matched) {
+      // Take one non-matching character
+      tokens.push({ text: remaining[0], className: "" });
+      remaining = remaining.slice(1);
+    }
+  }
+
+  return tokens;
+}
+
+function tokenizeMarkdown(line: string): Token[] {
+  const tokens: Token[] = [];
+  let remaining = line;
+
+  const patterns: { regex: RegExp; className: string }[] = [
+    { regex: /^(#{1,6}\s.+)/, className: "text-indigo-400 font-bold" },
+    { regex: /^(\[.*?\])\(.*?\)/, className: "code-glow" },
+    { regex: /^(`[^`]+`)/, className: "text-amber-400/70" },
+    { regex: /^(\s*[-*]\s)/, className: "text-accent/50" },
+    { regex: /^(\s+)/, className: "" },
+  ];
+
+  while (remaining.length > 0) {
+    let matched = false;
+    for (const { regex, className } of patterns) {
+      const match = remaining.match(regex);
+      if (match) {
+        tokens.push({ text: match[0], className });
+        remaining = remaining.slice(match[0].length);
+        matched = true;
+        break;
+      }
+    }
+    if (!matched) {
+      tokens.push({ text: remaining[0], className: "" });
+      remaining = remaining.slice(1);
+    }
+  }
+
+  return tokens;
+}
+
+function CodeLine({ line, language }: { line: string; language: string }) {
+  if (!line) return <span> </span>;
+  const tokens = tokenize(line, language);
+  return (
+    <>
+      {tokens.map((t, i) =>
+        t.className ? (
+          <span key={i} className={t.className}>{t.text}</span>
+        ) : (
+          <span key={i}>{t.text}</span>
+        )
+      )}
+    </>
+  );
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -332,12 +404,9 @@ export function About() {
                     <span className="mr-4 w-8 shrink-0 select-none text-right text-[11px] text-white/[0.10]">
                       {i + 1}
                     </span>
-                    <span
-                      className="whitespace-pre"
-                      dangerouslySetInnerHTML={{
-                        __html: line === "" ? " " : highlightLine(line, file.language) || line,
-                      }}
-                    />
+                    <span className="whitespace-pre">
+                      <CodeLine line={line} language={file.language} />
+                    </span>
                   </div>
                 ))}
               </div>
@@ -387,13 +456,13 @@ export function About() {
 
               {/* ── IDE Status Bar ── */}
               <div className="flex items-center gap-5 border-t border-white/[0.04] bg-[#0d1117]/95 px-4 py-2">
-                <StatusMetric icon="⏳" value={3} suffix="+" label="anos exp" visible={visible} />
+                <StatusMetric icon="3" value={3} suffix="+" label="anos exp" visible={visible} />
                 <span className="text-[10px] text-muted/15">|</span>
-                <StatusMetric icon="⚡" value={50} suffix="+" label="prop/dia" visible={visible} />
+                <StatusMetric icon="50" value={50} suffix="+" label="prop/dia" visible={visible} />
                 <span className="text-[10px] text-muted/15">|</span>
-                <StatusMetric icon="📄" value={1} suffix="" label="IEEE" visible={visible} />
+                <StatusMetric icon="1" value={1} suffix="" label="IEEE pub" visible={visible} />
                 <span className="text-[10px] text-muted/15">|</span>
-                <StatusMetric icon="👥" value={3} suffix="" label="meses lead" visible={visible} />
+                <StatusMetric icon="3" value={3} suffix="" label="meses lead" visible={visible} />
                 <div className="ml-auto flex items-center gap-3">
                   <span className="font-mono text-[9px] text-muted/25">Python 3.12</span>
                   <span className="font-mono text-[9px] text-muted/25">UTF-8</span>
@@ -434,7 +503,6 @@ function StatusMetric({
 
   return (
     <div className="flex items-center gap-1.5 font-mono text-[10px] text-muted/50 hover:text-muted/80 transition-colors">
-      <span className="text-[11px]">{icon}</span>
       <span className="tabular-nums text-foreground/70 font-medium">{count}{suffix}</span>
       <span className="text-muted/30">{label}</span>
     </div>
