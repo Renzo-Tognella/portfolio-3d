@@ -180,13 +180,13 @@ function Drawer({
 
   return (
     <group position={[xPos, 0.35, 0.6]}>
-      {/* Cavity — visible when drawer slides out */}
+      {/* Cavity — larger than drawer body to prevent wall z-fighting */}
       <mesh position={[0, 0, closedZ]}>
         <boxGeometry args={[0.7, 0.32, 0.48]} />
         <meshStandardMaterial color="#0a0a0a" roughness={0.9} />
       </mesh>
 
-      {/* Drawer body + face — offset +0.02 forward to prevent z-fighting */}
+      {/* Drawer body — smaller than cavity on all axes (0.08 clearance per side) */}
       <group ref={groupRef} position={[0, 0, closedZ + 0.02]}>
         {/* Drawer box */}
         <mesh
@@ -202,13 +202,13 @@ function Drawer({
             document.body.style.cursor = "auto";
           }}
         >
-          <boxGeometry args={[0.7, 0.3, 0.45]} />
+          <boxGeometry args={[0.62, 0.24, 0.40]} />
           {MAT.wood("#7B5F4A")}
         </mesh>
 
         {/* Front face — Canvas 2D texture with project info */}
-        <mesh position={[0, 0, 0.23]}>
-          <planeGeometry args={[0.6, 0.22]} />
+        <mesh position={[0, 0, 0.21]}>
+          <planeGeometry args={[0.54, 0.18]} />
           <meshStandardMaterial
             roughness={0.1}
             metalness={0}
@@ -217,8 +217,8 @@ function Drawer({
         </mesh>
 
         {/* Handle */}
-        <mesh position={[0, 0.08, 0.26]} castShadow>
-          <boxGeometry args={[0.3, 0.025, 0.025]} />
+        <mesh position={[0, 0.06, 0.23]} castShadow>
+          <boxGeometry args={[0.24, 0.02, 0.02]} />
           {MAT.metal("#888")}
         </mesh>
       </group>
@@ -349,13 +349,13 @@ function SecondMonitor({ scrollProgress }: { scrollProgress: number }) {
   const postitTex = usePostitTexture();
 
   return (
-    <group position={[-1.0, 1.35, -0.15]} rotation={[0, 0.15, 0]}>
+    <group position={[-1.35, 1.3, -0.2]} rotation={[0, 0.25, 0]}>
       <mesh castShadow>
-        <boxGeometry args={[0.95, 0.65, 0.05]} />
+        <boxGeometry args={[0.85, 0.58, 0.05]} />
         <meshStandardMaterial color="#22223a" roughness={0.25} metalness={0.6} />
       </mesh>
       <mesh position={[0, 0, 0.03]}>
-        <planeGeometry args={[0.82, 0.52]} />
+        <planeGeometry args={[0.72, 0.45]} />
         <meshStandardMaterial
           color="#0d1520"
           emissive={secondScreenOn ? "#818cf8" : "#1E3A5F"}
