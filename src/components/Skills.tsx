@@ -70,10 +70,11 @@ const CATEGORIES: Category[] = [
     textAccent: "#fda4af",
     skills: [
       { name: "Clean Architecture", level: 90 },
+      { name: "LangChain / LangGraph", level: 82 },
+      { name: "LLMs / MCP / Agents", level: 80 },
+      { name: "RAG / GraphRAG", level: 78 },
+      { name: "LangFuse", level: 72 },
       { name: "Git / CI/CD", level: 90 },
-      { name: "SOLID / Patterns", level: 85 },
-      { name: "LLMs / MCP", level: 80 },
-      { name: "C++ / CV", level: 70 },
     ],
   },
 ];

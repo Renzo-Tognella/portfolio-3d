@@ -72,10 +72,11 @@ export const SKILL_CATEGORIES: SkillCategory[] = [
     textColor: "#fda4af",
     skills: [
       { name: "Clean Architecture", level: 90 },
-      { name: "SOLID / Design Patterns", level: 85 },
+      { name: "LangChain / LangGraph", level: 82 },
       { name: "LLMs / MCP / Agents", level: 80 },
+      { name: "RAG / GraphRAG", level: 78 },
+      { name: "LangFuse", level: 72 },
       { name: "Git / CI/CD", level: 90 },
-      { name: "C++ / Computer Vision", level: 70 },
     ],
   },
 ];
