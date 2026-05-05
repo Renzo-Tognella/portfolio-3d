@@ -1,309 +1,294 @@
 "use client";
 
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useRef, useState } from "react";
 
 // ═══════════════════════════════════════════════════════════════
-// Skill Tree Data
+// Data
 // ═══════════════════════════════════════════════════════════════
 
-interface SkillNode {
+interface Skill {
   name: string;
-  level?: number;
-  color: string;
-  children?: SkillNode[];
+  level: number;
 }
 
-const TREE: SkillNode[] = [
+interface Category {
+  name: string;
+  accent: string;
+  accentRgb: string;
+  barFill: string;
+  textAccent: string;
+  skills: Skill[];
+}
+
+const CATEGORIES: Category[] = [
   {
     name: "Backend",
-    color: "#6366f1",
-    children: [
-      { name: "Ruby on Rails", level: 95, color: "#818cf8" },
-      { name: "Python", level: 85, color: "#818cf8" },
-      { name: "Java / Spring", level: 70, color: "#818cf8" },
-      { name: "REST / GraphQL", level: 90, color: "#a5b4fc" },
-      { name: "RSpec / TDD", level: 85, color: "#a5b4fc" },
+    accent: "#6366f1",
+    accentRgb: "99,102,241",
+    barFill: "linear-gradient(90deg, #6366f1, #818cf8)",
+    textAccent: "#a5b4fc",
+    skills: [
+      { name: "Ruby on Rails", level: 95 },
+      { name: "Python", level: 85 },
+      { name: "REST / GraphQL", level: 90 },
+      { name: "RSpec / TDD", level: 85 },
+      { name: "Java / Spring", level: 70 },
     ],
   },
   {
     name: "Frontend",
-    color: "#8b5cf6",
-    children: [
-      { name: "React / Next.js", level: 88, color: "#a78bfa" },
-      { name: "TypeScript", level: 90, color: "#a78bfa" },
-      { name: "Tailwind CSS", level: 85, color: "#c4b5fd" },
-      { name: "Three.js / R3F", level: 75, color: "#c4b5fd" },
+    accent: "#8b5cf6",
+    accentRgb: "139,92,246",
+    barFill: "linear-gradient(90deg, #8b5cf6, #a78bfa)",
+    textAccent: "#c4b5fd",
+    skills: [
+      { name: "TypeScript", level: 90 },
+      { name: "React / Next.js", level: 88 },
+      { name: "Tailwind CSS", level: 85 },
+      { name: "Three.js / R3F", level: 75 },
     ],
   },
   {
     name: "Dados & Infra",
-    color: "#06b6d4",
-    children: [
-      { name: "PostgreSQL", level: 90, color: "#22d3ee" },
-      { name: "Redis", level: 80, color: "#22d3ee" },
-      { name: "Docker", level: 85, color: "#67e8f9" },
-      { name: "AWS", level: 75, color: "#67e8f9" },
-      { name: "MongoDB", level: 65, color: "#67e8f9" },
+    accent: "#06b6d4",
+    accentRgb: "6,182,212",
+    barFill: "linear-gradient(90deg, #06b6d4, #22d3ee)",
+    textAccent: "#67e8f9",
+    skills: [
+      { name: "PostgreSQL", level: 90 },
+      { name: "Redis", level: 80 },
+      { name: "Docker", level: 85 },
+      { name: "AWS", level: 75 },
+      { name: "MongoDB", level: 65 },
     ],
   },
   {
     name: "Qualidade & IA",
-    color: "#f43f5e",
-    children: [
-      { name: "Clean Architecture", level: 90, color: "#fb7185" },
-      { name: "SOLID / Patterns", level: 85, color: "#fb7185" },
-      { name: "LLMs / MCP", level: 80, color: "#fda4af" },
-      { name: "Git / CI/CD", level: 90, color: "#fda4af" },
-      { name: "C++ / CV", level: 70, color: "#fda4af" },
+    accent: "#f43f5e",
+    accentRgb: "244,63,94",
+    barFill: "linear-gradient(90deg, #f43f5e, #fb7185)",
+    textAccent: "#fda4af",
+    skills: [
+      { name: "Clean Architecture", level: 90 },
+      { name: "Git / CI/CD", level: 90 },
+      { name: "SOLID / Patterns", level: 85 },
+      { name: "LLMs / MCP", level: 80 },
+      { name: "C++ / CV", level: 70 },
     ],
   },
 ];
 
 // ═══════════════════════════════════════════════════════════════
-// Tree Node Component
+// Scroll reveal hook
 // ═══════════════════════════════════════════════════════════════
 
-function TreeNode({
-  node,
-  x,
-  y,
-  parentX,
-  parentY,
-  depth,
-  visible,
+function useReveal(threshold = 0.1) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect(); } },
+      { threshold }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [threshold]);
+  return { ref, visible };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Skill row inside a card
+// ═══════════════════════════════════════════════════════════════
+
+function SkillRow({
+  skill,
+  cat,
   index,
+  visible,
 }: {
-  node: SkillNode;
-  x: number;
-  y: number;
-  parentX: number | null;
-  parentY: number | null;
-  depth: number;
-  visible: boolean;
+  skill: Skill;
+  cat: Category;
   index: number;
+  visible: boolean;
 }) {
-  const isLeaf = !node.children;
-  const nodeR = isLeaf ? 4 : 7;
-  const delay = depth * 300 + index * 100;
-
   return (
-    <g style={{ opacity: visible ? 1 : 0, transition: `opacity 0.5s ease ${delay}ms` }}>
-      {/* Connection line from parent */}
-      {parentX !== null && parentY !== null && (
-        <line
-          x1={parentX}
-          y1={parentY}
-          x2={x}
-          y2={y}
-          stroke={node.color}
-          strokeWidth={isLeaf ? 0.8 : 1.5}
-          strokeOpacity={0.3}
-          strokeDasharray={visible ? "1000" : "1000"}
-          strokeDashoffset={visible ? "0" : "1000"}
-          style={{
-            transition: visible
-              ? `stroke-dashoffset 1.2s ease ${delay + 200}ms`
-              : "none",
-          }}
-        />
-      )}
-
-      {/* Node circle */}
-      <circle
-        cx={x}
-        cy={y}
-        r={nodeR}
-        fill={isLeaf ? node.color : "transparent"}
-        stroke={node.color}
-        strokeWidth={isLeaf ? 1.5 : 2}
+    <div className="group/skill flex items-center gap-3">
+      {/* Dot */}
+      <span
+        className="h-1.5 w-1.5 shrink-0 rounded-full transition-shadow duration-500"
         style={{
-          filter: `drop-shadow(0 0 ${isLeaf ? 4 : 8}px ${node.color}80)`,
-          transition: `r 0.5s ease ${delay}ms`,
+          background: cat.accent,
+          boxShadow: visible
+            ? `0 0 6px ${cat.accent}80`
+            : "none",
+          transitionDelay: `${index * 80 + 300}ms`,
         }}
       />
 
-      {/* Node glow ring (branches only) */}
-      {!isLeaf && (
-        <circle
-          cx={x}
-          cy={y}
-          r={14}
-          fill="none"
-          stroke={node.color}
-          strokeWidth={0.5}
-          strokeOpacity={0.15}
-          className="animate-pulse"
-          style={{ animationDelay: `${delay}ms` }}
-        />
-      )}
+      {/* Name */}
+      <span className="w-28 shrink-0 text-xs text-foreground/70 transition-colors group-hover/skill:text-foreground/90">
+        {skill.name}
+      </span>
 
-      {/* Label */}
-      <text
-        x={x + (isLeaf ? 10 : 0)}
-        y={y + (isLeaf ? 4 : -12)}
-        fill={isLeaf ? "#94a3b8" : node.color}
-        fontSize={isLeaf ? 11 : 13}
-        fontFamily="var(--font-mono), monospace"
-        fontWeight={isLeaf ? 400 : 700}
-        textAnchor={isLeaf ? "start" : "middle"}
+      {/* Bar track */}
+      <div className="relative h-1 flex-1 overflow-hidden rounded-full bg-white/[0.04]">
+        {/* Bar fill */}
+        <div
+          className="absolute inset-y-0 left-0 rounded-full transition-all duration-1000 ease-out"
+          style={{
+            width: visible ? `${skill.level}%` : "0%",
+            background: cat.barFill,
+            boxShadow: visible
+              ? `0 0 8px ${cat.accent}60`
+              : "none",
+            transitionDelay: `${index * 100 + 400}ms`,
+          }}
+        />
+      </div>
+
+      {/* Percent */}
+      <span
+        className="w-8 text-right font-mono text-[10px] tabular-nums transition-opacity"
         style={{
-          transition: `opacity 0.3s ease ${delay + 100}ms`,
+          color: cat.textAccent,
+          opacity: visible ? 1 : 0,
+          transitionDelay: `${index * 100 + 500}ms`,
         }}
       >
-        {node.name}
-      </text>
-
-      {/* Level badge (leaves only) */}
-      {node.level !== undefined && (
-        <text
-          x={x + 10}
-          y={y + 18}
-          fill={node.color}
-          fontSize={9}
-          fontFamily="var(--font-mono), monospace"
-          textAnchor="start"
-          opacity={0.7}
-        >
-          {node.level}%
-        </text>
-      )}
-    </g>
+        {skill.level}%
+      </span>
+    </div>
   );
 }
 
 // ═══════════════════════════════════════════════════════════════
-// Tree Layout Calculator
+// Bento Card
 // ═══════════════════════════════════════════════════════════════
 
-interface LayoutNode {
-  node: SkillNode;
-  x: number;
-  y: number;
-  parentX: number | null;
-  parentY: number | null;
-  depth: number;
-  index: number;
-}
+function BentoCard({
+  cat,
+  visible,
+  delay,
+}: {
+  cat: Category;
+  visible: boolean;
+  delay: number;
+}) {
+  return (
+    <div
+      className="group/card relative overflow-hidden rounded-2xl border transition-all duration-700 hover:-translate-y-1"
+      style={{
+        background:
+          "linear-gradient(160deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)",
+        borderColor: "rgba(255,255,255,0.06)",
+        boxShadow: visible
+          ? `0 0 0 1px rgba(255,255,255,0.03), 0 12px 32px -8px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04)`
+          : "none",
+        opacity: visible ? 1 : 0,
+        transform: visible
+          ? "translateY(0)"
+          : "translateY(24px)",
+        transitionDelay: `${delay}ms`,
+      }}
+      onMouseMove={(e) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / rect.width - 0.5;
+        const y = (e.clientY - rect.top) / rect.height - 0.5;
+        e.currentTarget.style.transform = `translateY(-4px) perspective(800px) rotateX(${-y * 4}deg) rotateY(${x * 4}deg)`;
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = "";
+      }}
+    >
+      {/* Top accent line */}
+      <div
+        className="absolute inset-x-0 top-0 h-px transition-opacity duration-700 group-hover/card:opacity-80"
+        style={{
+          background: `linear-gradient(90deg, transparent 0%, ${cat.accent} 50%, transparent 100%)`,
+          opacity: 0.4,
+        }}
+      />
 
-function computeLayout(
-  branches: SkillNode[],
-  width: number,
-  height: number
-): LayoutNode[] {
-  const result: LayoutNode[] = [];
-  const rootX = width / 2;
-  const rootY = 50;
+      {/* Background glow blob */}
+      <div
+        className="pointer-events-none absolute -top-16 -right-16 h-32 w-32 rounded-full opacity-0 blur-3xl transition-all duration-700 group-hover/card:opacity-20"
+        style={{ background: cat.accent }}
+      />
 
-  const branchCount = branches.length;
-  const branchSpacing = width / (branchCount + 1);
-  const branchY = rootY + 120;
+      <div className="relative z-10 p-6">
+        {/* Header */}
+        <div className="mb-5 flex items-center gap-3">
+          <div
+            className="flex h-8 w-8 items-center justify-center rounded-lg ring-1 ring-white/10 transition-all duration-500 group-hover/card:scale-110"
+            style={{ background: `rgba(${cat.accentRgb},0.1)` }}
+          >
+            <span
+              className="font-mono text-sm font-bold"
+              style={{ color: cat.accent }}
+            >
+              {cat.name.charAt(0)}
+            </span>
+          </div>
+          <div>
+            <h3
+              className="font-mono text-xs font-bold uppercase tracking-widest"
+              style={{ color: cat.accent }}
+            >
+              {cat.name}
+            </h3>
+            <p className="text-[10px] text-muted/50">
+              {cat.skills.length} tecnologias
+            </p>
+          </div>
+        </div>
 
-  // Root
-  result.push({
-    node: { name: "Tech Stack", color: "#6366f1", children: branches },
-    x: rootX,
-    y: rootY,
-    parentX: null,
-    parentY: null,
-    depth: 0,
-    index: 0,
-  });
-
-  // Branches
-  branches.forEach((branch, bi) => {
-    const bx = branchSpacing * (bi + 1);
-    const by = branchY;
-
-    result.push({
-      node: branch,
-      x: bx,
-      y: by,
-      parentX: rootX,
-      parentY: rootY + 12,
-      depth: 1,
-      index: bi,
-    });
-
-    // Leaves
-    const leafCount = branch.children?.length ?? 0;
-    const leafStartY = by + 80;
-    const leafSpacingY = 42;
-    const leafX = bx;
-
-    branch.children?.forEach((leaf, li) => {
-      result.push({
-        node: leaf,
-        x: leafX,
-        y: leafStartY + li * leafSpacingY,
-        parentX: bx,
-        parentY: by + 10,
-        depth: 2,
-        index: li,
-      });
-    });
-  });
-
-  return result;
+        {/* Skills */}
+        <div className="flex flex-col gap-3">
+          {cat.skills.map((skill, i) => (
+            <SkillRow
+              key={skill.name}
+              skill={skill}
+              cat={cat}
+              index={i}
+              visible={visible}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 // ═══════════════════════════════════════════════════════════════
-// Main SkillTree Component
+// Main Skills component
 // ═══════════════════════════════════════════════════════════════
 
 export function Skills() {
   const sectionRef = useRef<HTMLElement>(null);
   const [visible, setVisible] = useState(false);
-  const [dims, setDims] = useState({ w: 900, h: 600 });
 
   useEffect(() => {
     const el = sectionRef.current;
     if (!el) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setVisible(true);
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.15 }
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect(); } },
+      { threshold: 0.1 }
     );
-    observer.observe(el);
-
-    // Responsive sizing
-    const updateSize = () => {
-      if (el) {
-        const rect = el.getBoundingClientRect();
-        setDims({ w: Math.max(600, rect.width - 48), h: Math.max(400, rect.width * 0.6) });
-      }
-    };
-    updateSize();
-    window.addEventListener("resize", updateSize);
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("resize", updateSize);
-    };
+    obs.observe(el);
+    return () => obs.disconnect();
   }, []);
-
-  const layout = useMemo(
-    () => computeLayout(TREE, dims.w, dims.h),
-    [dims]
-  );
-
-  // Separate root, branches, and leaves for staggered reveal
-  const rootNodes = layout.filter((n) => n.depth === 0);
-  const branchNodes = layout.filter((n) => n.depth === 1);
-  const leafNodes = layout.filter((n) => n.depth === 2);
 
   return (
     <section
       ref={sectionRef}
       id="skills"
-      className="relative w-full py-24 md:py-32 overflow-hidden"
+      className="relative w-full py-28 md:py-36 overflow-hidden"
     >
-      <div className="relative z-10 mx-auto max-w-7xl px-6 md:px-10">
+      <div className="relative z-10 mx-auto max-w-6xl px-6 md:px-10">
         {/* Heading */}
-        <div className="mb-16 text-center">
+        <div className="mb-20 text-center">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/5 bg-white/[0.02] px-4 py-1.5 backdrop-blur-sm">
             <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
             <span className="font-mono text-xs uppercase tracking-widest text-muted">
@@ -311,11 +296,13 @@ export function Skills() {
             </span>
           </div>
 
-          <h2 className="mb-4 text-4xl font-bold tracking-tight text-foreground md:text-5xl lg:text-6xl">
+          <h2 className="mb-5 text-4xl font-bold tracking-tight text-foreground md:text-5xl lg:text-6xl">
             Stack{" "}
             <span
               className="bg-gradient-to-r from-accent to-accent-secondary bg-clip-text text-transparent"
-              style={{ filter: "drop-shadow(0 0 20px rgba(99,102,241,0.3))" }}
+              style={{
+                filter: "drop-shadow(0 0 20px rgba(99,102,241,0.3))",
+              }}
             >
               Técnico
             </span>
@@ -335,88 +322,27 @@ export function Skills() {
           </div>
         </div>
 
-        {/* SVG Tree */}
-        <div
-          className="relative mx-auto w-full rounded-3xl border overflow-hidden"
-          style={{
-            borderColor: "rgba(255,255,255,0.05)",
-            background:
-              "linear-gradient(180deg, rgba(255,255,255,0.015) 0%, rgba(255,255,255,0.005) 100%)",
-            boxShadow:
-              "0 0 0 1px rgba(255,255,255,0.02), 0 24px 48px -16px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.03)",
-          }}
-        >
-          {/* Subtle grid overlay */}
-          <div
-            className="absolute inset-0 opacity-[0.03] pointer-events-none"
-            style={{
-              backgroundImage:
-                "radial-gradient(circle, rgba(99,102,241,0.3) 1px, transparent 1px)",
-              backgroundSize: "30px 30px",
-            }}
-          />
+        {/* ── Bento Grid ── */}
+        <div className="grid gap-4 md:grid-cols-3 md:grid-rows-2">
+          {/* Backend — spans 2 cols on md+ */}
+          <div className="md:col-span-2">
+            <BentoCard cat={CATEGORIES[0]} visible={visible} delay={0} />
+          </div>
 
-          <svg
-            viewBox={`0 0 ${dims.w} ${dims.h}`}
-            className="w-full"
-            style={{ minHeight: dims.h }}
-            preserveAspectRatio="xMidYMid meet"
-          >
-            {/* Background gradient blobs */}
-            <defs>
-              <radialGradient id="glow-indigo" cx="25%" cy="30%" r="40%">
-                <stop offset="0%" stopColor="#6366f1" stopOpacity="0.04" />
-                <stop offset="100%" stopColor="#6366f1" stopOpacity="0" />
-              </radialGradient>
-              <radialGradient id="glow-violet" cx="50%" cy="40%" r="35%">
-                <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.03" />
-                <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0" />
-              </radialGradient>
-              <radialGradient id="glow-cyan" cx="75%" cy="35%" r="35%">
-                <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.04" />
-                <stop offset="100%" stopColor="#06b6d4" stopOpacity="0" />
-              </radialGradient>
-              <radialGradient id="glow-rose" cx="85%" cy="30%" r="35%">
-                <stop offset="0%" stopColor="#f43f5e" stopOpacity="0.03" />
-                <stop offset="100%" stopColor="#f43f5e" stopOpacity="0" />
-              </radialGradient>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#glow-indigo)" />
-            <rect width="100%" height="100%" fill="url(#glow-violet)" />
-            <rect width="100%" height="100%" fill="url(#glow-cyan)" />
-            <rect width="100%" height="100%" fill="url(#glow-rose)" />
+          {/* Frontend */}
+          <div>
+            <BentoCard cat={CATEGORIES[1]} visible={visible} delay={150} />
+          </div>
 
-            {/* Root node */}
-            {rootNodes.map((n, i) => (
-              <TreeNode key={n.node.name} {...n} visible={visible} index={i} />
-            ))}
+          {/* Dados & Infra */}
+          <div>
+            <BentoCard cat={CATEGORIES[2]} visible={visible} delay={300} />
+          </div>
 
-            {/* Branch nodes */}
-            {branchNodes.map((n, i) => (
-              <TreeNode key={n.node.name} {...n} visible={visible} index={i} />
-            ))}
-
-            {/* Leaf nodes */}
-            {leafNodes.map((n, i) => (
-              <TreeNode key={n.node.name} {...n} visible={visible} index={i} />
-            ))}
-          </svg>
-        </div>
-
-        {/* Category legend */}
-        <div className="mt-10 flex flex-wrap items-center justify-center gap-6">
-          {TREE.map((cat) => (
-            <div key={cat.name} className="flex items-center gap-2">
-              <span
-                className="inline-block h-2.5 w-2.5 rounded-full"
-                style={{
-                  backgroundColor: cat.color,
-                  boxShadow: `0 0 8px ${cat.color}60`,
-                }}
-              />
-              <span className="font-mono text-xs text-muted">{cat.name}</span>
-            </div>
-          ))}
+          {/* Qualidade & IA — spans 2 cols on md+ */}
+          <div className="md:col-span-2">
+            <BentoCard cat={CATEGORIES[3]} visible={visible} delay={450} />
+          </div>
         </div>
       </div>
     </section>
